@@ -24,7 +24,7 @@ from fibermodes.fiber.material.material import OutOfRangeWarning
 from math import isinf
 import warnings
 
-__dir__, _ = os.path.split(__file__)
+_HERE, _ = os.path.split(__file__)
 
 
 class TestFiber(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestFiber(unittest.TestCase):
     """Test suite for Fiber class"""
 
     def testFiberProperties(self):
-        f = FiberFactory(os.path.join(__dir__, 'rcf.fiber'))
+        f = FiberFactory(os.path.join(_HERE, 'rcf.fiber'))
         fiber = f[0]
         self.assertEqual(len(fiber), 3)
         self.assertEqual(fiber.name(0), "center")
@@ -46,7 +46,7 @@ class TestFiber(unittest.TestCase):
         self.assertEqual(fiber.maxIndex(1, 1550e-9), 1.454)
 
     def testFiberWithMaterials(self):
-        f = FiberFactory(os.path.join(__dir__, 'smf28.fiber'))
+        f = FiberFactory(os.path.join(_HERE, 'smf28.fiber'))
         f.layers[0].material = "SiO2GeO2"
         f.layers[0].mparams = [0.05]
         f.layers[1].material = "Silica"
@@ -58,7 +58,7 @@ class TestFiber(unittest.TestCase):
                                1.444023621703261)
 
     def testToWl(self):
-        f = FiberFactory(os.path.join(__dir__, 'smf28.fiber'))
+        f = FiberFactory(os.path.join(_HERE, 'smf28.fiber'))
         fiber = f[0]
         self.assertAlmostEqual(fiber.toWl(fiber.V0(1600e-9)), 1600e-9)
 
