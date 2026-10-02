@@ -23,6 +23,49 @@ Outcome: all four applications start on PyQt6 and Python 3.10+. `pytest` runs
 the core tests and new GUI smoke tests. `pip install .[gui]` installs all
 that is necessary.
 
+## Branches and work packages
+
+Repository: `gotjen/fibermodes` (fork of `cbrunet/fibermodes`).
+Base branch: `refactor/modernization`. It contains this plan.
+
+Rules for each agent:
+
+- Make the sub-branch from the latest `origin/refactor/modernization`.
+- Do only the work of one work package. Do not change files of other packages.
+- Open the pull request in the fork, not in upstream:
+  `gh pr create --repo gotjen/fibermodes --base refactor/modernization`.
+- Use conventional commit messages (`feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`).
+- Run `QT_QPA_PLATFORM=offscreen pytest` before each push. Put the result in the pull request.
+- Do not change solver mathematics. If a failure looks numerical, stop and report it.
+
+| Wave | Sub-branch | Work | Plan section | Needs |
+|---|---|---|---|---|
+| 1 | `refactor/test-baseline` | Make the tests load in pytest, repair core warnings, find the cause of the 2 failures | Phase 0 | none |
+| 1 | `refactor/pyproject` | `pyproject.toml`, remove old tooling, GitHub Actions, README | Phase 1 | none |
+| 2 | `refactor/qtpy-foundation` | `fibermodesgui/__init__.py`, `util.py`, `widgets/`, `wavelengthcalculator.py`, `materialcalculator.py`, plus their tests | 3.1 to 3.4, Phase 2 | wave 1 merged |
+| 3 | `refactor/qtpy-fibereditor` | `fibereditor/`, `fibereditorapp.py`, plus tests | 3.2 to 3.5, Phase 2 | wave 2 merged |
+| 3 | `refactor/qtpy-fieldvisualizer` | `fieldvisualizer/`, plus tests | 3.2 to 3.5, Phase 2 | wave 2 merged |
+| 4 | `refactor/qtpy-modesolver` | `modesolver/`, `modesolverapp.py`, plus tests | 3.2 to 3.5, Phase 2 | wave 3 merged |
+| 5 | `refactor/cleanup-docs` | Remaining PyQt4 references, `doc/`, review, final checks | Phase 4, Verification | wave 4 merged |
+
+Sub-branches in the same wave can be done at the same time by different agents.
+The two wave 1 branches touch different files, but `refactor/pyproject`
+cannot show a green CI run until `refactor/test-baseline` is merged.
+Merge `refactor/test-baseline` first, then rebase `refactor/pyproject`.
+
+Each `qtpy-*` branch writes its GUI tests first (they fail), then does the
+port of its modules (they pass). Thus the base branch always has passing tests.
+
+After wave 5, open one pull request from `refactor/modernization` to `master`
+in the fork.
+
+### Start prompt for a cloud agent
+
+    Read .claude/plans/pyqt6-migration.md on branch refactor/modernization of
+    gotjen/fibermodes. Do the work package for sub-branch <NAME> and obey the
+    rules in "Branches and work packages". Open a pull request to
+    refactor/modernization in gotjen/fibermodes when the tests pass.
+
 ## Findings that control the design
 
 - The code already uses new-style signals. There is no `SIGNAL()`, `QString`
@@ -47,7 +90,7 @@ with `__dir__` renamed in a temporary copy of the tests:
 - `tests/fiber/solver/test_tlsif.py::TestTLSIF::testCase1LP`
   (`brentq` gets NaN at x=1.4474; `ValueError`).
 
-1. Do the work on the branch `refactor/pyqt6` (it exists and contains this plan).
+1. Do the work on the sub-branch `refactor/test-baseline`.
 2. Rename the module variable `__dir__` to `_HERE` in each test file that
    uses it (`tests/fiber/test_factory.py`, `tests/fiber/test_fiber.py`,
    `tests/simulator/test_simulator.py`, `tests/test_field.py`, and others
@@ -93,7 +136,8 @@ Add `tests/gui/` with pytest-qt. Each test makes a window and uses `qtbot`.
   wait for `computeFinished` with `qtbot.waitSignal`.
 - `test_slrc.py`, `test_colormap.py`: widget construction and value signals.
 
-These tests fail at import until Phase 3 is complete.
+Each `qtpy-*` sub-branch adds the tests for its own modules, and adds them
+before it does the port. The tests fail at import until that port is complete.
 
 ## Phase 3: The port
 
@@ -199,7 +243,8 @@ Write the full Qt6 names. Do not rely on the qtpy enum promotion.
 4. `fieldvisualizer/`.
 5. `modesolver/` and `modesolverapp.py` (largest: `mainwindow.py`, `plotframe.py`).
 
-Run the related smoke tests after each step. Make one commit for each step.
+Steps 1 and 2 are `refactor/qtpy-foundation`. Steps 3, 4 and 5 each have
+their own sub-branch. Run the related smoke tests after each step.
 
 ## Phase 4: Clean-up
 
