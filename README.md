@@ -1,8 +1,7 @@
 # fibermodes
 Multilayers fiber mode solver
 
-[![Build Status](https://travis-ci.org/cbrunet/fibermodes.svg?branch=master)](https://travis-ci.org/cbrunet/fibermodes)
-[![Coverage Status](https://coveralls.io/repos/cbrunet/fibermodes/badge.svg?branch=master&service=github)](https://coveralls.io/github/cbrunet/fibermodes?branch=master)
+[![tests](https://github.com/gotjen/fibermodes/actions/workflows/tests.yml/badge.svg)](https://github.com/gotjen/fibermodes/actions/workflows/tests.yml)
 
 API documentation available on http://fibermodes.rtfd.org/
 
@@ -12,19 +11,23 @@ Installation
 
 Requirements:
 
-- Python >= 3.4
+- Python >= 3.10
 - numpy
 - scipy
 
-For GUI:
+For GUI (extra `gui`):
 
- - PyQt4
- - pyqtgraph
+ - PyQt6 >= 6.5
+ - qtpy >= 2.4
+ - pyqtgraph >= 0.13.7
 
-To run unit tests:
+To run unit tests (extra `test`):
 
- - nose
- - coverage (for coverage tests)
+ - pytest
+ - pytest-cov (for coverage tests)
+ - pytest-qt (for GUI tests)
+
+All dependencies are declared in `pyproject.toml` and are installed by `pip`.
 
 
 This software is still under heavy development. Therefore, it is recommended to
@@ -39,19 +42,25 @@ Installing the required environment
 
 ### For Linux
 
-On **Ubuntu** / **Debian**, install the following packages:
-`python3`, `python3-numpy`, `python3-scipy`, `python3-pyqt4`, `python3-pyqtgraph`,
-`python3-nose`, `python3-coverage`.
+Install Python 3.10 or higher and `pip` from your distribution
+(for instance `python3`, `python3-pip` and `python3-venv` on **Ubuntu** / **Debian**,
+or `python` and `python-pip` on **Arch**). The Python dependencies are then
+installed with `pip` (see below). It is recommended to work in a virtual environment:
 
-On **Arch**, the required packages are:
-`python`, `python-numpy`, `python-scipy`, `python-pyqt4`, `python-nose`,
-`python-coverage`, `python-pip`.
+```
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+On a machine without a display (e.g. a CI server), PyQt6 needs a few system
+libraries, such as `libegl1`, `libgl1`, `libxkbcommon0`, `libfontconfig1` and
+`libdbus-1-3`. Set `QT_QPA_PLATFORM=offscreen` to run the GUI tests.
 
 
 ### For Windows
 
 I recommend to use a distribution that includes scientific Python.
-Choose a distribution that includes Python 3.4 or higher. I recommend
+Choose a distribution that includes Python 3.10 or higher. I recommend
 using either
 [WinPython](http://winpython.github.io/) or
 [Anaconda](https://www.continuum.io/downloads).
@@ -73,10 +82,16 @@ instead. However, this is the simplest installation, as it does not require `git
 1. Download the [ZIP archive from GitHub](https://github.com/cbrunet/fibermodes).
 2. Unzip it!
 3. On a command line, go inside the `fibermodes` directory.
-4. Run `python setup.py install`
+4. Run `pip install .[gui]` (or `pip install .` if you do not need the GUI).
 
 The command on line 4 may vary.
-For instance, it should be `sudo python3 setup.py install` on Ubuntu / Debian.
+For instance, it should be `python3 -m pip install .[gui]` on Ubuntu / Debian,
+preferably inside a virtual environment.
+
+This installs four GUI applications: `modesolver`, `fibereditor`,
+`materialcalculator` and `wavelengthcalculator`.
+On Windows, you can also start the mode solver from the source directory
+with `modesolver.bat`.
 
 
 Development installation
@@ -97,21 +112,24 @@ The third step is to fork and clone the
 I recommend forking it first, as it will allow you to commit your changes
 on GitHub, and to suggest pull requests.
 
-Then you should install the software in `develop` mode. This is similar
-to `install`, but it uses links instead of moving the files. Therefore, you
+Then you should install the software in *editable* mode. This is similar
+to a normal installation, but it uses links instead of copying the files. Therefore, you
 do not need to reinstall each time you pull changes from GitHub.
-The command is: `python setup.py develop`. You may need to use `python3`
-instead of `python` if you are on Ubuntu / Debian, and you may need to use
-`sudo` to run this command.
+The command, from the `fibermodes` directory, is:
+
+```
+pip install -e .[gui,test]
+```
 
 
 Running tests
 -------------
 
 To ensure you have all the required dependencies to run tests, you can
-do, from the `fibermodes` directory: `pip install .[test]`.
+do, from the `fibermodes` directory: `pip install -e .[gui,test]`.
 
-Then, you can either run `nosetests` or `python setup.py nosetests`.
+Then run `pytest`. To get a coverage report, run `pytest --cov`.
+On a machine without a display, run `QT_QPA_PLATFORM=offscreen pytest`.
 
 
 Building documentation
@@ -119,9 +137,9 @@ Building documentation
 
 You need sphinx (and probably a few dependencies to be documented).
 
-``
-python setup.py build_sphinx
-``
+```
+sphinx-build doc doc/_build/html
+```
 
 Documentation is generated under `doc/_build/html`.
 
