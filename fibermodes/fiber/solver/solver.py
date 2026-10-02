@@ -18,6 +18,24 @@ from scipy.optimize import brentq
 import logging
 
 
+def _brentq(fct, a, b, **kwargs):
+    """Call :py:func:`scipy.optimize.brentq`, or return None on NaN.
+
+    Since SciPy 1.11, ``brentq`` raises :py:exc:`ValueError` when ``fct``
+    returns NaN. Before that, it returned a point near the NaN, and the
+    "skip discontinuities" test in the callers rejected it. A NaN occurs,
+    for example, when ``neff`` is exactly the index of a layer (``u = 0``).
+    Returning None lets the callers skip the bracket, as before.
+
+    """
+    try:
+        return brentq(fct, a, b, **kwargs)
+    except ValueError as e:
+        if "NaN" not in str(e):
+            raise
+        return None
+
+
 class FiberSolver(object):
 
     """Generic abstract class for callable objects used as fiber solvers."""
@@ -76,8 +94,8 @@ class FiberSolver(object):
                     return b
 
                 if (fa > 0 and fb < 0) or (fa < 0 and fb > 0):
-                    z = brentq(fct, a, b, args=args, xtol=1e-20)
-                    fz = fct(z, *args)
+                    z = _brentq(fct, a, b, args=args, xtol=1e-20)
+                    fz = fct(z, *args) if z is not None else float("nan")
                     if abs(fa) > abs(fz) < abs(fb):  # Skip discontinuities
                         self.logger.debug("skipped ({}, {}, {})".format(
                             fa, fz, fb))
@@ -106,8 +124,8 @@ class FiberSolver(object):
                 fa, fb = s[i], s[i+1]
 
                 if (fa > 0 and fb < 0) or (fa < 0 and fb > 0):
-                    z = brentq(fct, a, b, args=args)
-                    fz = fct(z, *args)
+                    z = _brentq(fct, a, b, args=args)
+                    fz = fct(z, *args) if z is not None else float("nan")
                     if abs(fa) > abs(fz) < abs(fb):  # Skip discontinuities
                         return z
 

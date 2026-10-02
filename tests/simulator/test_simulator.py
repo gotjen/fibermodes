@@ -21,7 +21,7 @@ import os.path
 from fibermodes import FiberFactory, Mode, ModeFamily, HE11
 from fibermodes.simulator import Simulator
 
-__dir__, _ = os.path.split(__file__)
+_HERE, _ = os.path.split(__file__)
 
 
 class TestSimulator(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestSimulator(unittest.TestCase):
 
     def testConstructor(self):
         sim = self.Simulator(
-            os.path.join(__dir__, '..', 'fiber', 'smf28.fiber'), 1550e-9)
+            os.path.join(_HERE, '..', 'fiber', 'smf28.fiber'), 1550e-9)
         self.assertEqual(len(sim.wavelengths), 1)
         self.assertEqual(len(sim.fibers), 1)
         self.assertTrue(sim.initialized)
@@ -69,7 +69,7 @@ class TestSimulator(unittest.TestCase):
 
     def testSetFactory(self):
         sim = self.Simulator()
-        sim.set_factory(os.path.join(__dir__, '..', 'fiber', 'rcfs.fiber'))
+        sim.set_factory(os.path.join(_HERE, '..', 'fiber', 'rcfs.fiber'))
         self.assertEqual(len(sim.fibers), 5)
 
         f = FiberFactory()
@@ -85,7 +85,7 @@ class TestSimulator(unittest.TestCase):
 
     def testModesSMF(self):
         sim = self.Simulator(
-            os.path.join(__dir__, '..', 'fiber', 'smf28.fiber'),
+            os.path.join(_HERE, '..', 'fiber', 'smf28.fiber'),
             1550e-9, scalar=True)
         modes = list(sim.modes())
         self.assertEqual(len(modes), 1)
@@ -98,7 +98,7 @@ class TestSimulator(unittest.TestCase):
 
     def testModesRCF(self):
         sim = self.Simulator(
-            os.path.join(__dir__, '..', 'fiber', 'rcfs.fiber'), 1550e-9)
+            os.path.join(_HERE, '..', 'fiber', 'rcfs.fiber'), 1550e-9)
         modes = list(sim.modes())
         self.assertEqual(len(modes), 5)
         for fmodes, n in zip(modes, (4, 6, 6, 8, 8)):
@@ -107,7 +107,7 @@ class TestSimulator(unittest.TestCase):
 
     def testCutoff(self):
         sim = self.Simulator(
-            os.path.join(__dir__, '..', 'fiber', 'rcfs.fiber'), 1550e-9)
+            os.path.join(_HERE, '..', 'fiber', 'rcfs.fiber'), 1550e-9)
         co = list(sim.cutoff())
         self.assertEqual(len(co), 5)
         for fco in co:
@@ -116,7 +116,7 @@ class TestSimulator(unittest.TestCase):
 
     def testNeff(self):
         sim = self.Simulator(
-            os.path.join(__dir__, '..', 'fiber', 'smf28.fiber'),
+            os.path.join(_HERE, '..', 'fiber', 'smf28.fiber'),
             1550e-9, delta=1e-4)
         neff = list(sim.neff())
         self.assertEqual(len(neff), 1)

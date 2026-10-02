@@ -395,7 +395,7 @@ class Field(object):
                               numpy.square(self.Hz(phi, theta)))
 
     def Aeff(self):
-        """Estimation of mode effective area.
+        r"""Estimation of mode effective area.
 
         Suppose than r is large enough, such as \|F(r, r)\| = 0.
 
