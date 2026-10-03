@@ -1,11 +1,11 @@
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtWidgets
 from fibermodesgui import blockSignals
 
 
-class ComboItemDelegate(QtGui.QStyledItemDelegate):
+class ComboItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def __init__(self, parent=None, items=None, values=None,
-                 role=QtCore.Qt.DisplayRole):
+                 role=QtCore.Qt.ItemDataRole.DisplayRole):
         super().__init__(parent)
         self._items = items
         self._values = values
@@ -13,7 +13,7 @@ class ComboItemDelegate(QtGui.QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         if self._items:
-            combo = QtGui.QComboBox(parent)
+            combo = QtWidgets.QComboBox(parent)
             combo.addItems(self._items)
             combo.currentIndexChanged.connect(self.currentIndexChanged)
             return combo

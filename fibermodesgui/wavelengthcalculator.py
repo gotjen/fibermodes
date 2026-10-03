@@ -18,68 +18,72 @@
 import sys
 from fibermodes import Wavelength
 from fibermodesgui import blockSignals
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtWidgets
 
 
-class WavelengthCalculator(QtGui.QDialog):
+class WavelengthCalculator(QtWidgets.QDialog):
 
-    hidden = QtCore.pyqtSignal()
+    hidden = QtCore.Signal()
 
-    def __init__(self, parent=None, f=QtCore.Qt.Widget):
+    def __init__(self, parent=None, f=QtCore.Qt.WindowType.Widget):
         super().__init__(parent, f)
         self.wl = Wavelength(1550e-9)
 
         self.setWindowTitle(self.tr("Wavelength Calculator"))
-        layout = QtGui.QGridLayout()
+        layout = QtWidgets.QGridLayout()
 
-        llabel = QtGui.QLabel("λ")
-        self.linput = QtGui.QDoubleSpinBox()
+        llabel = QtWidgets.QLabel("λ")
+        self.linput = QtWidgets.QDoubleSpinBox()
         self.linput.setDecimals(3)
         self.linput.setRange(1, 50000)
         self.linput.setSingleStep(1)
         self.linput.setSuffix(" nm")
         self.linput.valueChanged.connect(self.lvalueChanged)
         llabel.setBuddy(self.linput)
-        layout.addWidget(llabel, 0, 0, alignment=QtCore.Qt.AlignRight)
+        layout.addWidget(llabel, 0, 0,
+                         alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         layout.addWidget(self.linput, 0, 1)
 
-        klabel = QtGui.QLabel("k₀")
-        self.kinput = QtGui.QDoubleSpinBox()
+        klabel = QtWidgets.QLabel("k₀")
+        self.kinput = QtWidgets.QDoubleSpinBox()
         self.kinput.setDecimals(3)
         self.kinput.setRange(125662, 6283185308)
         self.kinput.setSingleStep(1)
         self.kinput.setSuffix(" m⁻¹")
         self.kinput.valueChanged.connect(self.kvalueChanged)
         klabel.setBuddy(self.kinput)
-        layout.addWidget(klabel, 0, 2, alignment=QtCore.Qt.AlignRight)
+        layout.addWidget(klabel, 0, 2,
+                         alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         layout.addWidget(self.kinput, 0, 3)
 
-        wlabel = QtGui.QLabel("ω")
-        self.winput = QtGui.QDoubleSpinBox()
+        wlabel = QtWidgets.QLabel("ω")
+        self.winput = QtWidgets.QDoubleSpinBox()
         self.winput.setDecimals(3)
         self.winput.setRange(36, 1883652)
         self.winput.setSingleStep(1)
         self.winput.setSuffix(" Trad/s")
         self.winput.valueChanged.connect(self.wvalueChanged)
         wlabel.setBuddy(self.winput)
-        layout.addWidget(wlabel, 1, 0, alignment=QtCore.Qt.AlignRight)
+        layout.addWidget(wlabel, 1, 0,
+                         alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         layout.addWidget(self.winput, 1, 1)
 
-        flabel = QtGui.QLabel("f")
-        self.finput = QtGui.QDoubleSpinBox()
+        flabel = QtWidgets.QLabel("f")
+        self.finput = QtWidgets.QDoubleSpinBox()
         self.finput.setDecimals(3)
         self.finput.setRange(0, 1e12)
         self.finput.setSingleStep(1)
         self.finput.setSuffix(" THz")
         self.finput.valueChanged.connect(self.fvalueChanged)
         flabel.setBuddy(self.finput)
-        layout.addWidget(flabel, 1, 2, alignment=QtCore.Qt.AlignRight)
+        layout.addWidget(flabel, 1, 2,
+                         alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         layout.addWidget(self.finput, 1, 3)
 
-        self.band = QtGui.QLabel()
-        self.band.setAlignment(QtCore.Qt.AlignCenter)
+        self.band = QtWidgets.QLabel()
+        self.band.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.band, 2, 0, 1, 4,
-                         alignment=QtCore.Qt.AlignCenter)
+                         alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.setLayout(layout)
 
@@ -134,14 +138,13 @@ class WavelengthCalculator(QtGui.QDialog):
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    QtCore.QTextCodec.setCodecForTr(QtCore.QTextCodec.codecForName('UTF-8'))
+    app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Wavelength Calculator')
 
     win = WavelengthCalculator()
     win.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()
