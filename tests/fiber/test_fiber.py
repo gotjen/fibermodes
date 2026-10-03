@@ -19,7 +19,7 @@
 import unittest
 import os.path
 
-from fibermodes import FiberFactory
+from fibermodes import Mode, FiberFactory
 from fibermodes.fiber.material.material import OutOfRangeWarning
 from math import isinf
 import warnings
@@ -78,6 +78,25 @@ class TestFiber(unittest.TestCase):
             fiber = f[0]
             wl = fiber.toWl(2.4)
             self.assertGreater(wl, 10e-6)
+
+    def testToWlNearResonanceClaussiusMossotti(self):
+        """The fixed point iteration can try a wavelength near the 8.96 um
+        resonance of silica, where the Claussius-Mossotti index (SiO2F) is
+        not defined. This is not a convergence, but it must not raise."""
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=OutOfRangeWarning)
+            f = FiberFactory()
+            f.addLayer(radius=4e-6, material="SiO2GeO2", x=0.05)
+            f.addLayer(radius=10e-6, material="SiO2F", x=0.05)
+            f.addLayer(material="Silica")
+            fiber = f[0]
+            for v0 in (1.0, 2.4, 5.0):
+                wl = fiber.toWl(v0)
+                self.assertGreater(wl, 0, msg=str(v0))
+            for mode in (Mode("TE", 0, 1), Mode("TM", 0, 1),
+                         Mode("HE", 2, 1), Mode("LP", 1, 1)):
+                co = fiber.cutoff(mode)
+                self.assertTrue(0 < co < float("inf"), msg=str(mode))
 
 
 if __name__ == "__main__":

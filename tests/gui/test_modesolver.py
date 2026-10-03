@@ -370,3 +370,19 @@ def test_fiber_slider(loaded):
     assert slider.fiberInput.minimum() == 1
     slider.setNum(0)
     assert slider.fiberInput.minimum() == 0
+
+
+def test_computation_error_shown(loaded, qtbot, monkeypatch):
+    def fail():
+        raise ValueError("math domain error")
+        yield  # pragma: no cover
+
+    loaded.simParamBoxes['neff'].setChecked(True)
+    monkeypatch.setattr(loaded.doc.simulator, "neff", fail)
+    with qtbot.waitSignal(loaded.doc.computeFailed, timeout=120000):
+        loaded.run_simulation()
+    loaded.doc.wait()
+    qtbot.waitUntil(lambda: "math domain error" in
+                    loaded.statusBar().currentMessage())
+    assert not loaded.timer.isActive()
+    assert loaded.actions['start'].isEnabled()
