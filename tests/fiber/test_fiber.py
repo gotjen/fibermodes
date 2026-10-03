@@ -21,7 +21,7 @@ import os.path
 
 from fibermodes import Mode, FiberFactory
 from fibermodes.fiber.material.material import OutOfRangeWarning
-from math import isinf
+from math import isinf, isnan
 import warnings
 
 _HERE, _ = os.path.split(__file__)
@@ -90,13 +90,62 @@ class TestFiber(unittest.TestCase):
             f.addLayer(radius=10e-6, material="SiO2F", x=0.05)
             f.addLayer(material="Silica")
             fiber = f[0]
-            for v0 in (1.0, 2.4, 5.0):
+            # No wavelength of the material models gives V0 = 1: NaN.
+            self.assertTrue(isnan(fiber.toWl(1.0)))
+            for v0 in (2.4, 5.0):
                 wl = fiber.toWl(v0)
-                self.assertGreater(wl, 0, msg=str(v0))
+                self.assertAlmostEqual(fiber.V0(wl), v0, places=9)
             for mode in (Mode("TE", 0, 1), Mode("TM", 0, 1),
                          Mode("HE", 2, 1), Mode("LP", 1, 1)):
                 co = fiber.cutoff(mode)
                 self.assertTrue(0 < co < float("inf"), msg=str(mode))
+
+    def testToWlSolvesV0(self):
+        """toWl returns the wavelength where V0 equals the given V, for a
+        fiber with dispersive (SiO2F, Claussius-Mossotti) layers. (Below
+        V0 = 2.27, the wavelength would be above 8 um, beyond the
+        material models.)"""
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=OutOfRangeWarning)
+            fiber = _wfiber()
+            for v0 in (3.0, 4.0, 8.3, 11.5):
+                wl = fiber.toWl(v0)
+                self.assertAlmostEqual(fiber.V0(wl), v0, places=9,
+                                       msg=str(v0))
+
+    def testCutoffsWFiber(self):
+        """Cutoffs of a W fiber (SiO2GeO2 core, SiO2F trench). With a
+        non-converged toWl, the scan found false roots for HE(2,1) and
+        HE(3,1). Each cutoff must be a sign change of its equation."""
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=OutOfRangeWarning)
+            fiber = _wfiber()
+            expected = {
+                Mode("TE", 0, 1): 8.269621,
+                Mode("HE", 2, 1): 8.298005,
+                Mode("TM", 0, 1): 8.310835,
+                Mode("EH", 1, 1): 11.557234,
+                Mode("HE", 3, 1): 11.568822,
+            }
+            fct = {"TE": fiber._cutoff._tecoeq, "TM": fiber._cutoff._tmcoeq,
+                   "HE": fiber._cutoff._hecoeq, "EH": fiber._cutoff._ehcoeq}
+            for mode, co in expected.items():
+                v = fiber.cutoff(mode)
+                self.assertAlmostEqual(v, co, places=5, msg=str(mode))
+                f = fct[mode.family.name]
+                before = f(v - 1e-4, mode.nu)
+                after = f(v + 1e-4, mode.nu)
+                self.assertLess(before * after, 0, msg=str(mode))
+            self.assertLess(fiber.cutoff(Mode("EH", 1, 1)),
+                            fiber.cutoff(Mode("HE", 3, 1)))
+
+
+def _wfiber():
+    f = FiberFactory()
+    f.addLayer(radius=4e-6, material="SiO2GeO2", x=0.05)
+    f.addLayer(radius=10e-6, material="SiO2F", x=0.05)
+    f.addLayer(material="Silica")
+    return f[0]
 
 
 if __name__ == "__main__":
