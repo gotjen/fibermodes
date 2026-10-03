@@ -37,11 +37,12 @@ class FakeModeSolver(QtWidgets.QMainWindow):
 @pytest.fixture
 def viewer(qtbot):
     parent = FakeModeSolver()
-    qtbot.addWidget(parent)
     win = FieldVisualizer(parent)
+    # Register only the child: deleting the parent would also delete it.
     qtbot.addWidget(win)
     win.options.np.setValue(50)
-    return win
+    yield win
+    del parent  # keep the parent (and so its child) alive until teardown
 
 
 def test_start(viewer, qtbot):
@@ -91,9 +92,8 @@ def test_radius_and_points(viewer):
 
 def test_set_modes(viewer):
     before = viewer.image.image.copy()
-    viewer.setModes([[Mode("HE", 1, 1), 0, 0, 1],
-                     [Mode("TE", 0, 1), 0, 0, 1]])
-    assert not numpy.allclose(before, viewer.image.image)
+    viewer.setModes([[Mode("HE", 1, 1), 0, 0, 2]])
+    assert numpy.allclose(viewer.image.image, 2 * before)
 
 
 def test_plot_layers(viewer):
@@ -127,7 +127,8 @@ def test_quiver(viewer, qtbot):
     assert len(arrows) == 25
     assert all(a.isVisible() for a in arrows)
 
-    quiver.color.setColor((255, 0, 0))
+    # The color dialog emits sigColorChanging while the user picks.
+    quiver.color.setColor((255, 0, 0), finished=False)
     assert arrows[0].opts['brush'].color().red() == 255
     quiver.head.setValue(50)
     quiver.arrow.setValue(20)
