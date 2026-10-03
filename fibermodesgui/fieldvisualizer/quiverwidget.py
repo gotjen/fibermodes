@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from qtpy import QtWidgets
 import pyqtgraph as pg
 import numpy
 from math import ceil
@@ -7,7 +7,7 @@ from math import ceil
 # TODO: optimize for speed. See scatter plot? Pre built objects?
 
 
-class QuiverWidget(QtGui.QGroupBox):
+class QuiverWidget(QtWidgets.QGroupBox):
 
     def __init__(self, pwin, parent=None):
         super().__init__(parent)
@@ -19,24 +19,24 @@ class QuiverWidget(QtGui.QGroupBox):
         self.setCheckable(True)
         self.setChecked(False)
 
-        layout = QtGui.QFormLayout()
+        layout = QtWidgets.QFormLayout()
 
-        glabel = QtGui.QLabel(self.tr("Grid Size"))
-        self.grid = QtGui.QSpinBox()
+        glabel = QtWidgets.QLabel(self.tr("Grid Size"))
+        self.grid = QtWidgets.QSpinBox()
         self.grid.setRange(5, 100)
         self.grid.setValue(10)
         self.grid.valueChanged.connect(self.updateGrid)
         glabel.setBuddy(self.grid)
         layout.addRow(glabel, self.grid)
 
-        clabel = QtGui.QLabel(self.tr("Color"))
+        clabel = QtWidgets.QLabel(self.tr("Color"))
         self.color = pg.ColorButton(color=(85, 170, 255))
         self.color.sigColorChanging.connect(self.setColor)
         clabel.setBuddy(self.color)
         layout.addRow(clabel, self.color)
 
-        alabel = QtGui.QLabel(self.tr("Arrow Length"))
-        self.arrow = QtGui.QSpinBox()
+        alabel = QtWidgets.QLabel(self.tr("Arrow Length"))
+        self.arrow = QtWidgets.QSpinBox()
         self.arrow.setRange(2, 100)
         self.arrow.setSingleStep(5)
         self.arrow.setValue(40)
@@ -44,8 +44,8 @@ class QuiverWidget(QtGui.QGroupBox):
         alabel.setBuddy(self.arrow)
         layout.addRow(alabel, self.arrow)
 
-        hlabel = QtGui.QLabel(self.tr("Head Length"))
-        self.head = QtGui.QSpinBox()
+        hlabel = QtWidgets.QLabel(self.tr("Head Length"))
+        self.head = QtWidgets.QSpinBox()
         self.head.setRange(0, 100)
         self.head.setSingleStep(5)
         self.head.setValue(40)
