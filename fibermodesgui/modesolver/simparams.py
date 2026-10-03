@@ -36,7 +36,8 @@ class SimParamsDialog(QtWidgets.QDialog):
             QtWidgets.QDialogButtonBox.StandardButton.Close |
             QtWidgets.QDialogButtonBox.StandardButton.Help)
         buttonBox.rejected.connect(self.close)
-        buttonBox.clicked.connect(QtWidgets.QWhatsThis.enterWhatsThisMode)
+        buttonBox.helpRequested.connect(
+            QtWidgets.QWhatsThis.enterWhatsThisMode)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(flayout)
