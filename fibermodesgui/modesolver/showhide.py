@@ -13,14 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with FiberModes.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtWidgets
 from fibermodes import ModeFamily
 
 
-class ShowHideMode(QtGui.QGroupBox):
+class ShowHideMode(QtWidgets.QGroupBox):
 
-    showModes = QtCore.pyqtSignal(int, int)
-    hideModes = QtCore.pyqtSignal(int, int)
+    showModes = QtCore.Signal(int, int)
+    hideModes = QtCore.Signal(int, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -28,11 +28,11 @@ class ShowHideMode(QtGui.QGroupBox):
         self.setTitle(self.tr("Display"))
         self._modes = []
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
 
-        self.options = QtGui.QComboBox()
+        self.options = QtWidgets.QComboBox()
 
-        self.what = QtGui.QComboBox()
+        self.what = QtWidgets.QComboBox()
         self.what.addItems([self.tr("All"),
                             self.tr("Family"),
                             self.tr("ν parameter"),
@@ -40,9 +40,9 @@ class ShowHideMode(QtGui.QGroupBox):
         self.what.currentIndexChanged.connect(self.updateWhat)
         self.what.setCurrentIndex(0)
 
-        self.bshow = QtGui.QPushButton(self.tr("Show"))
+        self.bshow = QtWidgets.QPushButton(self.tr("Show"))
         self.bshow.clicked.connect(self.emitShowModes)
-        self.bhide = QtGui.QPushButton(self.tr("Hide"))
+        self.bhide = QtWidgets.QPushButton(self.tr("Hide"))
         self.bhide.clicked.connect(self.emitHideModes)
 
         layout.addWidget(self.what)
@@ -87,8 +87,9 @@ class ShowHideMode(QtGui.QGroupBox):
             for i in range(len(items)):
                 if items[i] not in ait:
                     item = model.item(i)
-                    item.setFlags(item.flags() & ~(QtCore.Qt.ItemIsSelectable |
-                                                   QtCore.Qt.ItemIsEnabled))
+                    item.setFlags(item.flags() & ~(
+                        QtCore.Qt.ItemFlag.ItemIsSelectable |
+                        QtCore.Qt.ItemFlag.ItemIsEnabled))
 
     def emitShowModes(self):
         self.showModes.emit(self.what.currentIndex(),
