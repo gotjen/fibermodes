@@ -1,0 +1,23 @@
+name: stress
+
+# Slow matrix tests of the solvers (about 3 minutes), marked "stress" and
+# skipped by the default test run. Start this workflow by hand from the
+# Actions tab after changes to the solvers.
+on:
+  workflow_dispatch:
+
+jobs:
+  stress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[test]"
+      - name: Run stress tests
+        run: pytest -m stress

@@ -133,7 +133,8 @@ On a machine without a display, run `QT_QPA_PLATFORM=offscreen pytest`.
 
 Slow matrix tests of the solvers are marked `stress` and are skipped by
 default. Run them with `pytest -m stress` after changes to the solvers
-(they take a few minutes).
+(they take a few minutes). On GitHub, start the `stress` workflow by hand
+from the Actions tab.
 
 
 Building documentation
