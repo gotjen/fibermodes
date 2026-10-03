@@ -18,6 +18,8 @@
 import unittest
 import os.path
 
+import pytest
+
 from fibermodes import FiberFactory, Mode, ModeFamily, HE11
 from fibermodes.simulator import Simulator
 
@@ -96,6 +98,42 @@ class TestSimulator(unittest.TestCase):
         self.assertTrue(HE11 in modeswl1)
         self.assertTrue(Mode(ModeFamily.LP, 0, 1) in modeswl1)
 
+    def testModesAndCutoffRCF(self):
+        """One ring-core fiber (the first of rcfs.fiber) exercises the
+        three-layer solve path. TestSimulatorStress solves all five."""
+        factory = FiberFactory(
+            os.path.join(_HERE, '..', 'fiber', 'rcfs.fiber'))
+        factory.layers[0].tparams[0] = 2e-6  # first value of the range
+        sim = self.Simulator(factory, 1550e-9)
+        self.assertEqual(len(sim.fibers), 1)
+
+        modes = list(sim.modes())
+        self.assertEqual(len(modes[0][0]), 4)
+        co = list(sim.cutoff())
+        self.assertEqual(co[0][0][Mode('HE', 1, 1)], 0)
+
+    def testNeff(self):
+        sim = self.Simulator(
+            os.path.join(_HERE, '..', 'fiber', 'smf28.fiber'),
+            1550e-9, delta=1e-4)
+        neff = list(sim.neff())
+        self.assertEqual(len(neff), 1)
+        self.assertAlmostEqual(neff[0][0][Mode('HE', 1, 1)], 1.446386514937099)
+
+
+@pytest.mark.stress
+class TestSimulatorStress(unittest.TestCase):
+
+    """Solve all five ring-core fibers of rcfs.fiber (about 90 s).
+
+    Run with ``pytest -m stress`` after changes to the solvers.
+
+    """
+
+    @property
+    def Simulator(self):
+        return Simulator
+
     def testModesRCF(self):
         sim = self.Simulator(
             os.path.join(_HERE, '..', 'fiber', 'rcfs.fiber'), 1550e-9)
@@ -114,13 +152,6 @@ class TestSimulator(unittest.TestCase):
             self.assertEqual(len(fco), 1)
             self.assertEqual(fco[0][Mode('HE', 1, 1)], 0)
 
-    def testNeff(self):
-        sim = self.Simulator(
-            os.path.join(_HERE, '..', 'fiber', 'smf28.fiber'),
-            1550e-9, delta=1e-4)
-        neff = list(sim.neff())
-        self.assertEqual(len(neff), 1)
-        self.assertAlmostEqual(neff[0][0][Mode('HE', 1, 1)], 1.446386514937099)
 
 if __name__ == "__main__":
     unittest.main()

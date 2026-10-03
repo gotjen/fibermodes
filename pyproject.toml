@@ -54,6 +54,10 @@ fibermodesgui = ["icons/**/*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 qt_api = "pyqt6"
+markers = [
+    "stress: slow matrix tests of the solvers; run with 'pytest -m stress'",
+]
+addopts = "-m 'not stress'"
 
 [tool.coverage.run]
 source = ["fibermodes"]
