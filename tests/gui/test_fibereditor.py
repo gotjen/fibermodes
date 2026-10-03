@@ -130,7 +130,8 @@ def test_save_as_round_trip(editor, tmp_path, monkeypatch):
         data = json.load(f)
     assert len(data["layers"]) == 3
 
-    editor.factory = FiberFactory()
+    editor.actionNew()
+    assert not editor.dirty()
     editor.actionOpen(target)
     assert _layer_names(editor) == ["core", "layer 2", "cladding"]
 
@@ -348,3 +349,15 @@ def test_fiber_plot_double_click(qtbot, smf28):
     xmin, xmax = viewBox.viewRange()[0]
     assert xmin == pytest.approx(-4.5 * 1.5)
     assert xmax == pytest.approx(4.5 * 1.5)
+
+
+def test_new_after_open_keeps_layers(editor):
+    """actionNew on a loaded fiber does not rename the last layer, and the
+    new fiber is not dirty."""
+    editor.actionOpen(SMF28)
+    editor.layerList.setCurrentRow(0)
+    editor.actionNew()
+    assert [layer.name for layer in editor.factory.layers] == \
+        ["core", "cladding"]
+    assert _layer_names(editor) == ["core", "cladding"]
+    assert not editor.dirty()

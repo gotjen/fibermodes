@@ -152,3 +152,8 @@ def test_colormap_presets(qtbot):
         w.cm.item.loadPreset('parula')
     lut = w.getLookupTable(10)
     assert lut.shape[0] == 10
+
+
+def test_range_change_prints_nothing(viewer, capsys):
+    viewer.graph.setRange(xRange=(-1e-5, 1e-5), yRange=(-1e-5, 1e-5))
+    assert capsys.readouterr().out == ""

@@ -183,5 +183,5 @@ class ModeTableModel(QtCore.QAbstractTableModel):
     def updateValue(self, fnum, wl, mode, j):
         if (fnum, wl) == (self._fnum, self._wl):
             i = self.modes.index(mode)
-            index = self.index(i, j)
+            index = self.index(i, j + 1)  # column 0 is the selection
             self.dataChanged.emit(index, index)
