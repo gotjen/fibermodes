@@ -1,7 +1,7 @@
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtWidgets
 
 
-class FiberInfoTable(QtGui.QTableWidget):
+class FiberInfoTable(QtWidgets.QTableWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,46 +24,46 @@ class FiberInfoTable(QtGui.QTableWidget):
             labels.append(fiber.name(i))
 
             # Inner radius
-            item = QtGui.QTableWidgetItem()
+            item = QtWidgets.QTableWidgetItem()
             r1 = fiber.innerRadius(i)
             item.setText("{:.5f} µm".format(r1 * 1e6))
-            item.setTextAlignment(QtCore.Qt.AlignRight)
+            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
             self.setItem(0, i, item)
 
             # Outer radius
-            item = QtGui.QTableWidgetItem()
+            item = QtWidgets.QTableWidgetItem()
             r2 = fiber.outerRadius(i)
             if r2 < float("inf"):
                 item.setText("{:.5f} µm".format(r2 * 1e6))
-                item.setTextAlignment(QtCore.Qt.AlignRight)
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
             else:
                 item.setText("∞")
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.setItem(1, i, item)
 
             # Thickness
-            item = QtGui.QTableWidgetItem()
+            item = QtWidgets.QTableWidgetItem()
             rt = fiber.thickness(i)
             if rt < float("inf"):
                 item.setText("{:.5f} µm".format(rt * 1e6))
-                item.setTextAlignment(QtCore.Qt.AlignRight)
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
             else:
                 item.setText("∞")
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             self.setItem(2, i, item)
 
             # Min index
-            item = QtGui.QTableWidgetItem()
+            item = QtWidgets.QTableWidgetItem()
             mii = fiber.minIndex(i, wl)
             item.setText("{:.5f}".format(mii))
-            item.setTextAlignment(QtCore.Qt.AlignRight)
+            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
             self.setItem(3, i, item)
 
             # Max index
-            item = QtGui.QTableWidgetItem()
+            item = QtWidgets.QTableWidgetItem()
             mai = fiber.maxIndex(i, wl)
             item.setText("{:.5f}".format(mai))
-            item.setTextAlignment(QtCore.Qt.AlignRight)
+            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
             self.setItem(4, i, item)
 
         self.setHorizontalHeaderLabels(labels)
