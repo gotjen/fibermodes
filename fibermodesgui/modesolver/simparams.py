@@ -1,12 +1,12 @@
-from PyQt4 import QtGui
+from qtpy import QtGui, QtWidgets
 
 
-class SimParamsDialog(QtGui.QDialog):
+class SimParamsDialog(QtWidgets.QDialog):
 
     def __init__(self, doc, parent=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
-        self.numProcs = QtGui.QSpinBox()
+        self.numProcs = QtWidgets.QSpinBox()
         self.numProcs.setRange(0, 16)
         self.numProcs.setValue(doc.numProcs)
         self.numProcs.setSpecialValueText("auto")
@@ -17,8 +17,8 @@ class SimParamsDialog(QtGui.QDialog):
             "Be aware than assigning more processes than the number of "
             "processors could decrease performance."))
 
-        deltaValidator = QtGui.QDoubleValidator(bottom=1e-31, top=1)
-        self.delta = QtGui.QLineEdit()
+        deltaValidator = QtGui.QDoubleValidator(1e-31, 1, 1000)
+        self.delta = QtWidgets.QLineEdit()
         self.delta.setValidator(deltaValidator)
         self.delta.setText("{:e}".format(doc.simulator.delta))
         self.delta.setWhatsThis(self.tr(
@@ -26,18 +26,20 @@ class SimParamsDialog(QtGui.QDialog):
             "increased computation time, while bigger number means more "
             "chances of skipping solutions."))
 
-        flayout = QtGui.QFormLayout()
-        flayout.addRow(QtGui.QLabel(self.tr("Number of processes")),
+        flayout = QtWidgets.QFormLayout()
+        flayout.addRow(QtWidgets.QLabel(self.tr("Number of processes")),
                        self.numProcs)
-        flayout.addRow(QtGui.QLabel(self.tr("Delta parameter")),
+        flayout.addRow(QtWidgets.QLabel(self.tr("Delta parameter")),
                        self.delta)
 
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close |
-                                           QtGui.QDialogButtonBox.Help)
+        buttonBox = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.StandardButton.Close |
+            QtWidgets.QDialogButtonBox.StandardButton.Help)
         buttonBox.rejected.connect(self.close)
-        buttonBox.clicked.connect(QtGui.QWhatsThis.enterWhatsThisMode)
+        buttonBox.helpRequested.connect(
+            QtWidgets.QWhatsThis.enterWhatsThisMode)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addLayout(flayout)
         layout.addWidget(buttonBox)
 

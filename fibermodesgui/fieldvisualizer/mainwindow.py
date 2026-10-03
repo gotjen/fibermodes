@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtGui
 from fibermodes import Mode
 from fibermodes.field import Field
 from fibermodesgui import blockSignals
@@ -55,7 +55,8 @@ class FieldVisualizer(AppWindow):
 
         self.options = PlotOptions(self)
         self.options.hidden.connect(self.actions['options'].toggle)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.options)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea,
+                           self.options)
 
         self.options.plotLayers.toggled.connect(self.plotLayers)
         self.options.cm.sigGradientChanged.connect(self.setImageColor)
@@ -116,7 +117,7 @@ class FieldVisualizer(AppWindow):
             vr = self.graph.viewRect()
             r = self.fiber.innerRadius(1)
             pen = pg.mkPen(color=(255, 255, 255, 255),
-                           style=QtCore.Qt.DotLine,
+                           style=QtCore.Qt.PenStyle.DotLine,
                            width=1)
             self.__layers = self.graph.scene().addEllipse(
                 -r, -r, 2*r, 2*r, pen=pen)
@@ -155,14 +156,6 @@ class FieldVisualizer(AppWindow):
 
     def updateRange(self, view, rgn):
         pass
-        print()
-        print("view", view.viewRect())
-        print("rgn", rgn)
-        print("graph", self.graph.viewRect())
-        print("image", self.image.viewRect())
-        print("image bound", self.image.boundingRect())
-        print("scene bounding rect", self.image.sceneBoundingRect())
-        print("pixel size", self.image.pixelSize())
 
     def hideEvent(self, event):
         self.options.hide()

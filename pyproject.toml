@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fibermodes"
+version = "1.0.0"
+description = "Multilayers optical fiber mode solver"
+readme = "README.md"
+authors = [{ name = "Charles Brunet", email = "charles@cbrunet.net" }]
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE.txt"]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Telecommunications Industry",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = ["numpy", "scipy"]
+
+[project.optional-dependencies]
+gui = ["qtpy>=2.4", "PyQt6>=6.5", "pyqtgraph>=0.13.7"]
+test = ["pytest", "pytest-cov", "pytest-qt"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+
+[project.urls]
+Homepage = "https://github.com/gotjen/fibermodes"
+Documentation = "http://fibermodes.rtfd.org/"
+
+[project.gui-scripts]
+fibereditor = "fibermodesgui.fibereditorapp:main"
+materialcalculator = "fibermodesgui.materialcalculator:main"
+modesolver = "fibermodesgui.modesolverapp:main"
+wavelengthcalculator = "fibermodesgui.wavelengthcalculator:main"
+
+[tool.setuptools.packages.find]
+include = ["fibermodes", "fibermodes.*", "fibermodesgui", "fibermodesgui.*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+fibermodes = ["fiber/solver/cudasrc/*.c"]
+fibermodesgui = ["icons/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+qt_api = "pyqt6"
+markers = [
+    "stress: slow matrix tests of the solvers; run with 'pytest -m stress'",
+]
+addopts = "-m 'not stress'"
+
+[tool.coverage.run]
+source = ["fibermodes"]
+omit = [
+    "*numpy*",
+    "*scipy*",
+    "fibermodes/fiber/geometry/supergaussian.py",
+]

@@ -36,9 +36,11 @@ from fibermodes import Wavelength, Mode, ModeFamily
 from fibermodes import constants
 from fibermodes.functions import derivative
 from fibermodes.field import Field
+from .material.material import OutOfRangeWarning
 from itertools import count
 import logging
-from scipy.optimize import fixed_point
+import warnings
+from scipy.optimize import brentq, fixed_point
 from functools import lru_cache
 
 
@@ -172,11 +174,19 @@ class Fiber(object):
     def V0(self, wl):
         return Wavelength(wl).k0 * self.innerRadius(-1) * self.NA(wl)
 
+    #: Wavelength bracket of the root search in :py:meth:`toWl`. The upper
+    #: bound is below the 8.96 um resonance of silica, where the
+    #: Claussius-Mossotti indices are not defined.
+    TOWL_BRACKET = (0.2e-6, 8e-6)
+
     def toWl(self, V0, maxiter=500, tol=1e-15):
         """Convert V0 number to wavelength.
 
-        An iterative method is used, since the index can be wavelength
-        dependant.
+        The index can depend on the wavelength, therefore V0(wl) = V0 is
+        solved with a bracketed root search (:py:data:`TOWL_BRACKET`). If
+        V0 is outside the bracket, a fixed point iteration is used. If no
+        wavelength solves the equation (for instance beyond the range
+        of the material models), NaN is returned.
 
         """
         if V0 == 0:
@@ -184,18 +194,29 @@ class Fiber(object):
         if isinf(V0):
             return 0
 
+        b = self.innerRadius(-1)
+
+        wl = self._toWlBracketed(V0, b)
+        if wl is not None:
+            return Wavelength(wl)
+
         def f(x):
             return constants.tpi / V0 * b * self.NA(x)
 
-        b = self.innerRadius(-1)
-
         wl = f(1.55e-6)
-        if abs(wl - f(wl)) > tol:
+        try:
+            converged = abs(wl - f(wl)) <= tol
+        except ValueError:  # index not defined at wl (see below)
+            converged = False
+        if not converged:
             for w in (1.55e-6, 5e-6, 10e-6):
                 try:
                     wl = fixed_point(f, w, xtol=tol, maxiter=maxiter)
-                except RuntimeError:
+                except (RuntimeError, ValueError):
                     # FIXME: What should we do if it does not converge?
+                    # ValueError: the iteration reached a wavelength where
+                    # an index is not defined (Claussius-Mossotti materials
+                    # near the 8.96 um resonance of silica).
                     self.logger.info(
                         "toWl: did not converged from {}µm "
                         "for V0 = {} (wl={})".format(w*1e6, V0, wl))
@@ -206,7 +227,42 @@ class Fiber(object):
             self.logger.error("toWl: did not converged for "
                               "V0 = {} (wl={})".format(V0, wl))
 
+        # Never return an estimate that does not solve V0(wl) = V0: in the
+        # cutoff search, it gave false roots. NaN makes the search skip it.
+        try:
+            solved = abs(self.V0(wl) - V0) <= 1e-9 * V0
+        except (ValueError, ZeroDivisionError):
+            solved = False
+        if not solved:
+            self.logger.info("toWl: no wavelength for V0 = {}".format(V0))
+            return Wavelength(float("nan"))
+
         return Wavelength(wl)
+
+    def _toWlBracketed(self, V0, b):
+        """Solve V0(wl) = V0 in TOWL_BRACKET, or return None.
+
+        V0(wl) decreases with wl, so the root is unique, and brentq always
+        converges when V0 is between V0(hi) and V0(lo). The fixed point
+        iteration of toWl does not converge for some dispersive materials,
+        and its estimate gave false roots in the cutoff search.
+
+        """
+        def g(wl):
+            return constants.tpi / wl * b * self.NA(wl) - V0
+
+        lo, hi = self.TOWL_BRACKET
+        with warnings.catch_warnings():
+            # The bracket is wider than the range of the material models
+            # on purpose; OutOfRangeWarning is reported where the indices
+            # are used.
+            warnings.simplefilter("ignore", category=OutOfRangeWarning)
+            try:
+                if not g(lo) > 0 > g(hi):
+                    return None
+                return brentq(g, lo, hi, xtol=1e-20, rtol=1e-15)
+            except ValueError:  # an index is not defined in the bracket
+                return None
 
     def cutoff(self, mode):
         try:

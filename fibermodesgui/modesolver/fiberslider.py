@@ -1,30 +1,30 @@
 
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtWidgets
 
 
-class FiberSlider(QtGui.QFrame):
+class FiberSlider(QtWidgets.QFrame):
 
-    valueChanged = QtCore.pyqtSignal(int)
+    valueChanged = QtCore.Signal(int)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        label = QtGui.QLabel(self.tr("Fiber"))
+        label = QtWidgets.QLabel(self.tr("Fiber"))
 
-        self.fiberInput = QtGui.QSpinBox()
+        self.fiberInput = QtWidgets.QSpinBox()
         self.fiberInput.valueChanged.connect(self.changeValue)
 
-        self.totLabel = QtGui.QLabel()
+        self.totLabel = QtWidgets.QLabel()
 
-        self.slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         self.slider.valueChanged.connect(self.changeValue)
 
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
         hlayout.addWidget(label)
         hlayout.addWidget(self.fiberInput)
         hlayout.addWidget(self.totLabel)
 
-        vlayout = QtGui.QVBoxLayout()
+        vlayout = QtWidgets.QVBoxLayout()
         vlayout.addLayout(hlayout)
         vlayout.addWidget(self.slider)
 

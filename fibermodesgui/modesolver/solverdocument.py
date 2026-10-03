@@ -1,15 +1,19 @@
 
-from PyQt4 import QtCore
+from qtpy import QtCore
 from fibermodes import FiberFactory, Simulator, PSimulator, Mode
 import csv
+import logging
 
 
 class SolverDocument(QtCore.QThread):
 
-    computeStarted = QtCore.pyqtSignal()
-    modesAvailable = QtCore.pyqtSignal(int)  # fiber num
-    valueAvailable = QtCore.pyqtSignal(int, int, object, int)
-    computeFinished = QtCore.pyqtSignal()
+    computeStarted = QtCore.Signal()
+    modesAvailable = QtCore.Signal(int)  # fiber num
+    valueAvailable = QtCore.Signal(int, int, object, int)
+    computeFinished = QtCore.Signal()
+    computeFailed = QtCore.Signal(str)  # error message
+
+    logger = logging.getLogger(__name__)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -29,20 +33,22 @@ class SolverDocument(QtCore.QThread):
         self.running = False
         self.ready = False
 
+        # Names of the simulator methods. They are looked up when the
+        # computation runs, because numProcs replaces self.simulator.
         self.PARAMFCT = {
-            "cutoff (V)": self.simulator.cutoff,
-            "cutoff (wavelength)": self.simulator.cutoffWl,
-            "neff": self.simulator.neff,
-            "b": self.simulator.b,
-            "vp": self.simulator.vp,
-            "beta0": self.simulator.beta0,
-            "ng": self.simulator.ng,
-            "vg": self.simulator.vg,
-            "beta1": self.simulator.beta1,
-            "D": self.simulator.D,
-            "beta2": self.simulator.beta2,
-            "S": self.simulator.S,
-            "beta3": self.simulator.beta3}
+            "cutoff (V)": "cutoff",
+            "cutoff (wavelength)": "cutoffWl",
+            "neff": "neff",
+            "b": "b",
+            "vp": "vp",
+            "beta0": "beta0",
+            "ng": "ng",
+            "vg": "vg",
+            "beta1": "beta1",
+            "D": "D",
+            "beta2": "beta2",
+            "S": "S",
+            "beta3": "beta3"}
 
     @property
     def initialized(self):
@@ -146,10 +152,21 @@ class SolverDocument(QtCore.QThread):
         super().start()
 
     def run(self):
+        self.running = True
+        self._step = "modes"
+        try:
+            self._compute()
+        except Exception as exc:
+            # Report the error instead of ending the thread silently.
+            self.logger.exception("Computation of %s failed", self._step)
+            self.running = False
+            self.simulator.terminate()
+            self.computeFailed.emit("{}: {}".format(self._step, exc))
+
+    def _compute(self):
         self.modes = []
         self.values = {}
         self.toCompute = 0
-        self.running = True
         for fnum, resultf in enumerate(self.simulator.modes()):
             self.modes.append(resultf)
             self.modesAvailable.emit(fnum)
@@ -160,7 +177,8 @@ class SolverDocument(QtCore.QThread):
             self.computeStarted.emit()
 
             for j, p in enumerate(self.params):
-                fct = self.PARAMFCT[p]
+                self._step = p
+                fct = getattr(self.simulator, self.PARAMFCT[p])
 
                 for fnum, resultf in enumerate(fct()):
                     if not self.running:

@@ -1,39 +1,39 @@
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtWidgets
 from fibermodes.field import Field
 from .colormapwidget import ColorMapWidget
 from .quiverwidget import QuiverWidget
 
 
-class PlotOptions(QtGui.QDockWidget):
+class PlotOptions(QtWidgets.QDockWidget):
 
-    hidden = QtCore.pyqtSignal()
+    hidden = QtCore.Signal()
 
-    def __init__(self, pwin, parent=None, f=QtCore.Qt.Widget):
+    def __init__(self, pwin, parent=None, f=QtCore.Qt.WindowType.Widget):
         super().__init__(parent, f)
         self.win = pwin
         self.setWindowTitle(self.tr("Plot Options"))
 
-        frame = QtGui.QFrame()
-        layout = QtGui.QVBoxLayout()
+        frame = QtWidgets.QFrame()
+        layout = QtWidgets.QVBoxLayout()
         frame.setLayout(layout)
 
-        self.field = QtGui.QComboBox()
+        self.field = QtWidgets.QComboBox()
         self.field.addItems(Field.FTYPES)
         self.field.setCurrentIndex(Field.FTYPES.index('Emod'))
         layout.addWidget(self.field)
 
-        flayout = QtGui.QFormLayout()
+        flayout = QtWidgets.QFormLayout()
 
-        nplabel = QtGui.QLabel(self.tr("Number of points"))
-        self.np = QtGui.QSpinBox()
+        nplabel = QtWidgets.QLabel(self.tr("Number of points"))
+        self.np = QtWidgets.QSpinBox()
         self.np.setRange(50, 5000)
         self.np.setValue(200)
         self.np.setSingleStep(50)
         nplabel.setBuddy(self.np)
         flayout.addRow(nplabel, self.np)
 
-        rlabel = QtGui.QLabel(self.tr("Radius"))
-        self.radius = QtGui.QDoubleSpinBox()
+        rlabel = QtWidgets.QLabel(self.tr("Radius"))
+        self.radius = QtWidgets.QDoubleSpinBox()
         self.radius.setRange(0.001, 1000)
         self.radius.setValue(pwin.fiber.innerRadius(-1) * 1.5e6)
         self.radius.setSuffix(" µm")
@@ -43,7 +43,7 @@ class PlotOptions(QtGui.QDockWidget):
 
         layout.addLayout(flayout)
 
-        self.plotLayers = QtGui.QPushButton(
+        self.plotLayers = QtWidgets.QPushButton(
             self.tr("Display fiber layers"))
         self.plotLayers.setCheckable(True)
         layout.addWidget(self.plotLayers)
