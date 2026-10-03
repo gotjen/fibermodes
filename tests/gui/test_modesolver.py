@@ -1,7 +1,6 @@
 """Tests for the mode solver main window (fibermodesgui.modesolver)."""
 
 import json
-import os
 import sys
 
 import pytest
@@ -40,6 +39,7 @@ def solved(loaded, qtbot):
 
 def test_ms_to_str():
     assert msToStr(3723004) == "1:02:03.004"
+    assert msToStr(3733004) == "1:02:13.004"
     assert msToStr(3723004, False) == "1:02:03"
 
 
@@ -58,7 +58,14 @@ def test_start(modesolver, qtbot):
 
 
 def test_main(qapp, qtbot, monkeypatch, smf28_file):
-    solver = os.path.splitext(smf28_file)[0] + ".solver"
+    # Save a .solver file beside the fiber, then open it with main().
+    first = ModeSolver()
+    first.doc.numProcs = 1
+    qtbot.addWidget(first, before_close_func=lambda w: w.setDirty(False))
+    load_fiber(first, smf28_file)
+    first.simParamBoxes['neff'].setChecked(True)
+    first.save()
+    solver = first.documentName()
     shown = []
 
     class FakeApplication:
@@ -75,13 +82,15 @@ def test_main(qapp, qtbot, monkeypatch, smf28_file):
 
     monkeypatch.setattr(QtWidgets, "QApplication", FakeApplication)
     monkeypatch.setattr(sys, "argv", ["modesolver", solver])
-    # The .solver file does not exist: main() still starts the window.
     with pytest.raises(SystemExit) as excinfo:
         modesolverapp.main()
     assert excinfo.value.code == 0
     assert len(shown) == 1
-    shown[0].setDirty(False)
-    qtbot.addWidget(shown[0])
+    win = shown[0]
+    qtbot.addWidget(win, before_close_func=lambda w: w.setDirty(False))
+    assert win.doc.filename == smf28_file
+    assert win.doc.params == ["neff"]
+    assert not win.dirty()
 
 
 def test_load_fiber(loaded):
@@ -259,11 +268,13 @@ def test_chareq(solved, qtbot):
     assert dlg.windowTitle().startswith("Characteristic function")
     dlg.zeros.setChecked(True)
     dlg.points.setChecked(True)
-    dlg.modeInput.setCurrentText("LP")
-    dlg.fType.setCurrentIndex(1)
-    assert dlg.windowTitle().startswith("Cutoff function")
+    dlg.modeInput.setCurrentText("TE")
+    assert dlg.nuInput.maximum() == 0
     dlg.zeros.setChecked(False)
     dlg.delta.setText("1e-5")
+    # The cutoff function is only offered for solvers that have _lpcoeq
+    # (not SSIF, used by smf28).
+    assert dlg.fType.parent() is None
 
 
 def test_fields(solved, qtbot):
@@ -277,7 +288,8 @@ def test_fields(solved, qtbot):
     assert len(viewers[0].modes) == 1
 
 
-@pytest.mark.parametrize("what, option", [(0, 0), (1, 0), (2, 1), (3, 0)])
+@pytest.mark.parametrize("what, option", [
+    (0, 0), (1, ModeFamily.HE.value - 1), (2, 1), (3, 0)])
 def test_show_hide_modes(solved, what, option):
     model = solved.modeTableModel
     solved.on_hide_modes(what, option)

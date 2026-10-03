@@ -174,16 +174,22 @@ def test_save_load_round_trip(frame):
     frame.load(saved)
     assert frame.save() == saved
     assert frame.plotOptions.showLegend.isChecked()
-    assert _curves(frame)[1].opts['pen'].style() == Qt.PenStyle.DashLine
+    neff = [c for c in _curves(frame)
+            if (c.name() or "").endswith("(neff)")]
+    assert neff
+    assert all(c.opts['pen'].style() == Qt.PenStyle.DashLine for c in neff)
 
 
 def test_load_old_solver_pen_style(frame):
-    """Files saved by the PyQt4 version stored hash(Qt.SolidLine) == 1."""
+    """Files saved by the PyQt4 version stored the pen style as an int
+    (hash(Qt.DotLine) == 3)."""
     frame.load({'xaxis': VNUMBER,
                 'options': {'legend': False, 'cutoffs': False,
                             'layers': False, 'current': False},
                 'yaxis': [[1, 3, 'Mode']]})
-    assert _curves(frame)[0].opts['pen'].style() == Qt.PenStyle.DashLine
+    curves = _curves(frame)
+    assert curves
+    assert all(c.opts['pen'].style() == Qt.PenStyle.DotLine for c in curves)
 
 
 def test_options_button(frame, qtbot):

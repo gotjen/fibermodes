@@ -33,11 +33,14 @@ def test_not_ready_does_not_start(doc):
     assert doc.modes == []
 
 
-@pytest.mark.parametrize("numprocs, cls", [(0, PSimulator), (1, Simulator)])
+@pytest.mark.parametrize("numprocs, cls", [
+    (None, PSimulator), (2, PSimulator), (1, Simulator)])
 def test_compute(doc, qtbot, numprocs, cls):
     """The computation runs in the QThread, with the sequential simulator
-    and with the multiprocessing one."""
-    doc.numProcs = numprocs if numprocs else 2
+    and with the multiprocessing one, also after numProcs replaced the
+    simulator."""
+    if numprocs is not None:
+        doc.numProcs = numprocs
     assert isinstance(doc.simulator, cls)
     _prepare(doc)
     doc.ready = True
@@ -88,7 +91,7 @@ def test_export(doc, qtbot, tmp_path):
     with open(target, newline='') as f:
         rows = list(csv.reader(f))
     assert rows[0] == ["Mode", "neff", "cutoff (V)"]
-    assert rows[1][0] == str(doc.modes[0][1][0])
+    assert {r[0] for r in rows[1:]} == {str(m) for m in doc.modes[0][1]}
     assert len(rows) == len(doc.modes[0][1]) + 1
 
 

@@ -52,7 +52,7 @@ def compute(qtbot, win, params=("neff",), wavelengths=None,
     """Select params and wavelengths, run the simulation, and wait for
     computeFinished."""
     if wavelengths is not None:
-        win.wavelengthInput.setValue(list(wavelengths))
+        win.wavelengthInput.setValue(wavelengths)
     for p, box in win.simParamBoxes.items():
         box.setChecked(p in params)
     with qtbot.waitSignal(win.doc.computeFinished, timeout=timeout):
