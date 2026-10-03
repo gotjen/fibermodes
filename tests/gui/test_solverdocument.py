@@ -106,3 +106,23 @@ def test_clear_caches(doc, qtbot):
     doc.clear_all_caches()
     assert doc.values == {}
     assert doc.modes == []
+
+
+def test_error_in_computation_is_reported(doc, qtbot, monkeypatch):
+    """An exception in a parameter computation stops the computation and
+    is reported, instead of ending the thread silently."""
+    doc.numProcs = 1
+    _prepare(doc)
+
+    def fail():
+        raise ValueError("math domain error")
+        yield  # pragma: no cover
+
+    monkeypatch.setattr(doc.simulator, "cutoff", fail)
+    doc.ready = True
+    with qtbot.waitSignal(doc.computeFailed, timeout=120000) as blocker:
+        doc.start()
+    doc.wait()
+    assert "math domain error" in blocker.args[0]
+    assert "cutoff (V)" in blocker.args[0]
+    assert not doc.running
