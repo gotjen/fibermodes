@@ -110,3 +110,13 @@ def test_wavelength_change_updates_rows(solved):
     solved.wavelengthSlider.wavelengthInput.setValue(2)
     assert model.rowCount() == len(solved.doc.modes[0][1])
     assert model.rowCount() < n1000
+
+
+def test_value_available_updates_its_column(solved, qtbot):
+    """Column 0 is the check box, so parameter j is in column j + 1."""
+    model = solved.modeTableModel
+    mode = model.modes[0]
+    with qtbot.waitSignal(model.dataChanged) as blocker:
+        solved.doc.valueAvailable.emit(0, 0, mode, 1)
+    top_left = blocker.args[0]
+    assert (top_left.row(), top_left.column()) == (0, 2)
