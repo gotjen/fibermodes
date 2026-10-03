@@ -3,7 +3,7 @@
 import logging
 
 import pytest
-from qtpy import QtCore, QtGui, QtWidgets
+from qtpy import QtGui, QtWidgets
 
 from fibermodesgui.widgets import AppWindow
 
@@ -11,7 +11,8 @@ from fibermodesgui.widgets import AppWindow
 @pytest.fixture
 def win(qtbot):
     w = AppWindow()
-    qtbot.addWidget(w)
+    # qtbot closes the window at teardown; a dirty window would ask to save.
+    qtbot.addWidget(w, before_close_func=lambda w: w.setDirty(False))
     return w
 
 
