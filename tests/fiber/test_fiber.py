@@ -21,7 +21,7 @@ import os.path
 
 from fibermodes import Mode, FiberFactory
 from fibermodes.fiber.material.material import OutOfRangeWarning
-from math import isinf
+from math import isinf, isnan
 import warnings
 
 _HERE, _ = os.path.split(__file__)
@@ -90,9 +90,11 @@ class TestFiber(unittest.TestCase):
             f.addLayer(radius=10e-6, material="SiO2F", x=0.05)
             f.addLayer(material="Silica")
             fiber = f[0]
-            for v0 in (1.0, 2.4, 5.0):
+            # No wavelength of the material models gives V0 = 1: NaN.
+            self.assertTrue(isnan(fiber.toWl(1.0)))
+            for v0 in (2.4, 5.0):
                 wl = fiber.toWl(v0)
-                self.assertGreater(wl, 0, msg=str(v0))
+                self.assertAlmostEqual(fiber.V0(wl), v0, places=9)
             for mode in (Mode("TE", 0, 1), Mode("TM", 0, 1),
                          Mode("HE", 2, 1), Mode("LP", 1, 1)):
                 co = fiber.cutoff(mode)
@@ -100,11 +102,13 @@ class TestFiber(unittest.TestCase):
 
     def testToWlSolvesV0(self):
         """toWl returns the wavelength where V0 equals the given V, for a
-        fiber with dispersive (SiO2F, Claussius-Mossotti) layers."""
+        fiber with dispersive (SiO2F, Claussius-Mossotti) layers. (Below
+        V0 = 2.27, the wavelength would be above 8 um, beyond the
+        material models.)"""
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=OutOfRangeWarning)
             fiber = _wfiber()
-            for v0 in (2.0, 4.0, 8.3, 11.5):
+            for v0 in (3.0, 4.0, 8.3, 11.5):
                 wl = fiber.toWl(v0)
                 self.assertAlmostEqual(fiber.V0(wl), v0, places=9,
                                        msg=str(v0))
