@@ -190,12 +190,19 @@ class Fiber(object):
         b = self.innerRadius(-1)
 
         wl = f(1.55e-6)
-        if abs(wl - f(wl)) > tol:
+        try:
+            converged = abs(wl - f(wl)) <= tol
+        except ValueError:  # index not defined at wl (see below)
+            converged = False
+        if not converged:
             for w in (1.55e-6, 5e-6, 10e-6):
                 try:
                     wl = fixed_point(f, w, xtol=tol, maxiter=maxiter)
-                except RuntimeError:
+                except (RuntimeError, ValueError):
                     # FIXME: What should we do if it does not converge?
+                    # ValueError: the iteration reached a wavelength where
+                    # an index is not defined (Claussius-Mossotti materials
+                    # near the 8.96 um resonance of silica).
                     self.logger.info(
                         "toWl: did not converged from {}µm "
                         "for V0 = {} (wl={})".format(w*1e6, V0, wl))

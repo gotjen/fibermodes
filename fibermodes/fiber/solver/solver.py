@@ -60,7 +60,16 @@ class FiberSolver(object):
 
     def __record(self, fct):
         def wrapper(z, *args):
-            r = fct(z, *args)
+            try:
+                r = fct(z, *args)
+            except ValueError as exc:
+                # An index is not defined at this point, e.g. a
+                # Claussius-Mossotti material near the 8.96 um resonance of
+                # silica, reached at low V. Return NaN, so that the root
+                # search skips the point, as for other NaN values.
+                if "math domain error" not in str(exc):
+                    raise
+                r = float("nan")
             if self._logging:
                 self.log.append((z, r))
             return r
