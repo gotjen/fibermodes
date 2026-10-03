@@ -180,7 +180,13 @@ def test_geometry(editor):
         "m parameter:"]
 
 
-@pytest.mark.parametrize("name", material.__all__)
+@pytest.mark.parametrize("name", [
+    "Fixed",  # index parameter
+    "SiO2GeO2",  # concentration parameter
+    "Silica",  # no parameter
+] + [pytest.param(name, marks=pytest.mark.stress)
+     for name in material.__all__
+     if name not in ("Fixed", "SiO2GeO2", "Silica")])
 def test_material(editor, qtbot, name):
     editor.layerList.setCurrentRow(0)
     editor.matType.setCurrentText(name)

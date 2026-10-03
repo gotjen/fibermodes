@@ -288,24 +288,22 @@ def test_fields(solved, qtbot):
     assert len(viewers[0].modes) == 1
 
 
-@pytest.mark.parametrize("what, option", [
-    (0, 0), (1, ModeFamily.HE.value - 1), (2, 1), (3, 0)])
-def test_show_hide_modes(solved, what, option):
+def test_show_hide_modes(solved):
     model = solved.modeTableModel
-    solved.on_hide_modes(what, option)
-    hidden = {m for m, sel in solved.doc.selection.items() if not sel}
-    if what == 0:
-        assert hidden == set(model.modes)
-    elif what == 1:
-        assert hidden == {m for m in model.modes
-                          if m.family is ModeFamily(option + 1)}
-    elif what == 2:
-        assert hidden == {m for m in model.modes if m.nu == option}
-    else:
-        assert hidden == {m for m in model.modes if m.m == option + 1}
-    assert hidden
-    solved.on_show_modes(0, 0)
-    assert all(solved.doc.selection.values())
+    he = ModeFamily.HE.value - 1
+    expected = {
+        (0, 0): set(model.modes),
+        (1, he): {m for m in model.modes if m.family is ModeFamily.HE},
+        (2, 1): {m for m in model.modes if m.nu == 1},
+        (3, 0): {m for m in model.modes if m.m == 1},
+    }
+    for (what, option), hidden_modes in expected.items():
+        solved.on_hide_modes(what, option)
+        hidden = {m for m, sel in solved.doc.selection.items() if not sel}
+        assert hidden == hidden_modes, (what, option)
+        assert hidden
+        solved.on_show_modes(0, 0)
+        assert all(solved.doc.selection.values())
 
 
 def test_show_hide_widget(qtbot, solved):

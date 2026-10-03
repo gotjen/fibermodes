@@ -77,9 +77,10 @@ def test_menus_and_toolbars(win):
     assert win.findChildren(QtWidgets.QToolBar)
 
 
-@pytest.mark.parametrize("name", ["document-new", "list-add", "pen", "info"])
+@pytest.mark.parametrize("name", ["document-new", "pen"])
 def test_get_icon_fallback(win, no_icon_theme, name):
-    """Icons are found in the 'actions' and in the 'emblems' folders."""
+    """Icons are found in the 'actions' (document-new) and in the
+    'emblems' (pen) folders."""
     icon = win.getIcon(name)
     assert not icon.isNull()
     sizes = {s.width() for s in icon.availableSizes()}

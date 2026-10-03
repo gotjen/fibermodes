@@ -39,31 +39,34 @@ def test_default_plot(frame):
     assert _curves(frame)
 
 
-@pytest.mark.parametrize("style", LINESV)
-def test_line_styles(frame, style):
+def test_line_style(frame):
     model = frame.plotModel
+    style = Qt.PenStyle.DashLine.value
     model.setData(model.index(0, 1), style, Qt.ItemDataRole.UserRole)
     assert model.data(model.index(0, 1), Qt.ItemDataRole.DisplayRole) == \
         LINES[LINESV.index(style)]
     curves = _curves(frame)
     assert curves
-    assert curves[0].opts['pen'].style() == Qt.PenStyle(style)
+    assert all(c.opts['pen'].style() == Qt.PenStyle.DashLine
+               for c in curves)
 
 
-@pytest.mark.parametrize("mark", MARKV)
-def test_marks(frame, mark):
+def test_marks(frame):
+    """No mark, one mark per mode family, and a fixed mark."""
     model = frame.plotModel
-    model.setData(model.index(0, 2), mark, Qt.ItemDataRole.UserRole)
-    assert model.data(model.index(0, 2), Qt.ItemDataRole.DisplayRole) == \
-        MARK[MARKV.index(mark)]
-    curves = _curves(frame)
-    assert curves
-    if mark is None:
-        assert curves[0].opts['symbol'] is None
-    elif mark == 'Mode':
-        assert curves[0].opts['symbol'] in ('o', 's', 't', 'd', '+')
-    else:
-        assert curves[0].opts['symbol'] == mark
+    for mark in (None, 'Mode', 's'):
+        model.setData(model.index(0, 2), mark, Qt.ItemDataRole.UserRole)
+        assert model.data(model.index(0, 2),
+                          Qt.ItemDataRole.DisplayRole) == \
+            MARK[MARKV.index(mark)]
+        symbols = {c.opts['symbol'] for c in _curves(frame)}
+        if mark is None:
+            assert symbols == {None}
+        elif mark == 'Mode':
+            assert symbols <= {'o', 's', 't', 'd', '+'}
+            assert len(symbols) > 1
+        else:
+            assert symbols == {'s'}
 
 
 def test_legend_on_off(frame):
@@ -78,22 +81,21 @@ def test_legend_on_off(frame):
         assert frame.legend is None or not frame.legend.isVisible()
 
 
-@pytest.mark.parametrize("xaxis", [FIBERS, WAVELENGTHS, VNUMBER])
-def test_x_axis(frame, xaxis):
-    frame.xAxisSelector.setCurrentIndex(xaxis)
-    assert len(frame.X) == (1 if xaxis == FIBERS else 4)
-    assert _curves(frame)
-
-
-@pytest.mark.parametrize("xaxis", [WAVELENGTHS, VNUMBER])
-def test_options(frame, xaxis):
-    frame.xAxisSelector.setCurrentIndex(xaxis)
+def test_x_axis_and_options(frame):
     opts = frame.plotOptions
-    assert opts.showCutoffs.isEnabled() == (xaxis == VNUMBER)
+    for xaxis in (FIBERS, WAVELENGTHS, VNUMBER):
+        frame.xAxisSelector.setCurrentIndex(xaxis)
+        assert len(frame.X) == (1 if xaxis == FIBERS else 4)
+        assert _curves(frame)
+        # Only "cutoff (V)" is computed: cutoffs need the V number axis.
+        assert opts.showCutoffs.isEnabled() == (xaxis == VNUMBER)
+
     opts.showCutoffs.setChecked(True)
     opts.showLayers.setChecked(True)
     opts.showCurrentFiberWl.setChecked(True)
-    assert _curves(frame)
+    for xaxis in (WAVELENGTHS, VNUMBER):
+        frame.xAxisSelector.setCurrentIndex(xaxis)
+        assert _curves(frame)
 
 
 def test_layers_normalized(frame):

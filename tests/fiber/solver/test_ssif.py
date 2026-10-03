@@ -17,6 +17,8 @@
 
 import unittest
 
+import pytest
+
 from fibermodes import Wavelength, Mode, FiberFactory
 from math import sqrt
 
@@ -74,6 +76,7 @@ class TestSSIF(unittest.TestCase):
         for mode, V0 in sols:
             self.assertAlmostEqual(fiber.cutoff(mode), V0, 4, msg=str(mode))
 
+    @pytest.mark.stress
     def testCutoffV2(self):
         """Values from cutoff acticle, Table III."""
         n1 = 1.474
@@ -100,6 +103,7 @@ class TestSSIF(unittest.TestCase):
         for mode, V0 in sols:
             self.assertAlmostEqual(fiber.cutoff(mode), V0, 4, msg=str(mode))
 
+    @pytest.mark.stress
     def testCutoffV3(self):
         """Same index for n1 and n2; therefore this is SSIF."""
         n1 = 1.6
@@ -199,6 +203,7 @@ class TestSSIF(unittest.TestCase):
             self.assertAlmostEqual(u, sols[m], 3)
         # print(fiber._solver.neff.cache_info())
 
+    @pytest.mark.stress
     def testBures_4_2_8(self):
         n2 = 1.457420
         n1 = 1.462420

@@ -55,7 +55,8 @@ def test_start(viewer, qtbot):
     assert viewer.image.image.shape == (50, 50)
 
 
-def test_toggle_options(viewer, qtbot):
+def test_options_dock(viewer, qtbot):
+    """The F4 action toggles the dock, and closing the dock unchecks it."""
     viewer.show()
     qtbot.waitExposed(viewer)
     assert viewer.options.isVisible()
@@ -65,21 +66,32 @@ def test_toggle_options(viewer, qtbot):
     viewer.actions['options'].trigger()
     assert viewer.options.isVisible()
 
-
-def test_closing_options_unchecks_action(viewer, qtbot):
-    viewer.show()
-    qtbot.waitExposed(viewer)
     with qtbot.waitSignal(viewer.options.hidden):
         viewer.options.close()
     assert not viewer.actions['options'].isChecked()
 
+    viewer.actions['options'].trigger()
+    viewer.hide()  # hiding the window hides the dock
+    assert not viewer.options.isVisible()
 
-@pytest.mark.parametrize("fname", Field.FTYPES)
-def test_field_types(viewer, fname):
-    viewer.options.field.setCurrentText(fname)
+
+def test_field_type(viewer):
+    """The combo box selects the field component."""
+    emod = viewer.image.image.copy()
+    viewer.options.field.setCurrentText("Ez")
     image = viewer.image.image
     assert image.shape == (50, 50)
     assert numpy.all(numpy.isfinite(image))
+    assert not numpy.allclose(image, emod)
+
+
+@pytest.mark.stress
+@pytest.mark.parametrize("fname", Field.FTYPES)
+def test_all_field_types_finite(viewer, fname):
+    """Edge case: polar components can give NaN on the r = 0 axis.
+    tests/test_field.py computes some components without checking them."""
+    viewer.options.field.setCurrentText(fname)
+    assert numpy.all(numpy.isfinite(viewer.image.image))
 
 
 def test_radius_and_points(viewer):
@@ -133,13 +145,6 @@ def test_quiver(viewer, qtbot):
     quiver.head.setValue(50)
     quiver.arrow.setValue(20)
     assert arrows[0].opts['headLen'] <= 20
-
-
-def test_hide_hides_options(viewer, qtbot):
-    viewer.show()
-    qtbot.waitExposed(viewer)
-    viewer.hide()
-    assert not viewer.options.isVisible()
 
 
 def test_colormap_presets(qtbot):
