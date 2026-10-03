@@ -1,15 +1,15 @@
 
-from PyQt4 import QtCore
+from qtpy import QtCore
 from fibermodes import FiberFactory, Simulator, PSimulator, Mode
 import csv
 
 
 class SolverDocument(QtCore.QThread):
 
-    computeStarted = QtCore.pyqtSignal()
-    modesAvailable = QtCore.pyqtSignal(int)  # fiber num
-    valueAvailable = QtCore.pyqtSignal(int, int, object, int)
-    computeFinished = QtCore.pyqtSignal()
+    computeStarted = QtCore.Signal()
+    modesAvailable = QtCore.Signal(int)  # fiber num
+    valueAvailable = QtCore.Signal(int, int, object, int)
+    computeFinished = QtCore.Signal()
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -29,20 +29,22 @@ class SolverDocument(QtCore.QThread):
         self.running = False
         self.ready = False
 
+        # Names of the simulator methods. They are looked up when the
+        # computation runs, because numProcs replaces self.simulator.
         self.PARAMFCT = {
-            "cutoff (V)": self.simulator.cutoff,
-            "cutoff (wavelength)": self.simulator.cutoffWl,
-            "neff": self.simulator.neff,
-            "b": self.simulator.b,
-            "vp": self.simulator.vp,
-            "beta0": self.simulator.beta0,
-            "ng": self.simulator.ng,
-            "vg": self.simulator.vg,
-            "beta1": self.simulator.beta1,
-            "D": self.simulator.D,
-            "beta2": self.simulator.beta2,
-            "S": self.simulator.S,
-            "beta3": self.simulator.beta3}
+            "cutoff (V)": "cutoff",
+            "cutoff (wavelength)": "cutoffWl",
+            "neff": "neff",
+            "b": "b",
+            "vp": "vp",
+            "beta0": "beta0",
+            "ng": "ng",
+            "vg": "vg",
+            "beta1": "beta1",
+            "D": "D",
+            "beta2": "beta2",
+            "S": "S",
+            "beta3": "beta3"}
 
     @property
     def initialized(self):
@@ -160,7 +162,7 @@ class SolverDocument(QtCore.QThread):
             self.computeStarted.emit()
 
             for j, p in enumerate(self.params):
-                fct = self.PARAMFCT[p]
+                fct = getattr(self.simulator, self.PARAMFCT[p])
 
                 for fnum, resultf in enumerate(fct()):
                     if not self.running:

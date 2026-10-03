@@ -13,19 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with FiberModes.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtWidgets
 from math import isnan, isinf
 
 
-class ModeTableView(QtGui.QTableView):
+class ModeTableView(QtWidgets.QTableView):
 
-    selChanged = QtCore.pyqtSignal(list)
+    selChanged = QtCore.Signal(list)
 
     def __init__(self, model, parent=None):
         super().__init__(parent)
         self.setModel(model)
         self.setSortingEnabled(True)
-        self.sortByColumn(1, QtCore.Qt.AscendingOrder)
+        self.sortByColumn(1, QtCore.Qt.SortOrder.AscendingOrder)
 
     def selectedModes(self):
         rows = set()
@@ -37,7 +37,8 @@ class ModeTableView(QtGui.QTableView):
             # Use source model, because the proxy model transforms
             # the Mode object into list...
             mode = self.model().sourceModel().headerData(
-                row, QtCore.Qt.Vertical, QtCore.Qt.UserRole)
+                row, QtCore.Qt.Orientation.Vertical,
+                QtCore.Qt.ItemDataRole.UserRole)
             modes.append(mode)
         return modes
 
@@ -70,25 +71,27 @@ class ModeTableModel(QtCore.QAbstractTableModel):
         doc.modesAvailable.connect(self.updateModes)
         doc.valueAvailable.connect(self.updateValue)
 
-    def rowCount(self, parent=QtCore.QModelIndex):
+    def rowCount(self, parent=QtCore.QModelIndex()):
         return len(self.modes)
 
-    def columnCount(self, parent=QtCore.QModelIndex):
+    def columnCount(self, parent=QtCore.QModelIndex()):
         return len(self._doc.params) + 1  # plus selection
 
     def flags(self, index):
         if index.column() == 0:
-            f = QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled
+            f = (QtCore.Qt.ItemFlag.ItemIsUserCheckable |
+                 QtCore.Qt.ItemFlag.ItemIsEnabled)
         else:
             f = super().flags(index)
         return f
 
-    def data(self, index, role=QtCore.Qt.DisplayRole):
+    def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
         mode = self.modes[index.row()]
         if index.column() == 0:  # selection
-            if role == QtCore.Qt.CheckStateRole:
-                sel = self._doc.selection.get(mode, 1)
-                return QtCore.Qt.Checked if sel else QtCore.Qt.Unchecked
+            if role == QtCore.Qt.ItemDataRole.CheckStateRole:
+                sel = self._doc.selection.get(mode, True)
+                return (QtCore.Qt.CheckState.Checked if sel
+                        else QtCore.Qt.CheckState.Unchecked)
             else:
                 return None
 
@@ -102,7 +105,7 @@ class ModeTableModel(QtCore.QAbstractTableModel):
 
         p = self._doc.params[index.column()-1]
         m, u = PARAMS.get(p, (1, ""))
-        if role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
             if v is None:
                 return '...'
             elif isnan(v):
@@ -113,38 +116,41 @@ class ModeTableModel(QtCore.QAbstractTableModel):
                 if u:
                     u = " "+u
                 return "{:.5g}{}".format(v*m, u)
-        elif role == QtCore.Qt.ToolTipRole:
+        elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
             if v is None:
                 return None
             elif isinf(v):
                 return 'infinity'
             else:
                 return v*m
-        elif role == QtCore.Qt.UserRole:
+        elif role == QtCore.Qt.ItemDataRole.UserRole:
             return float(v) if v is not None else v
 
-    def setData(self, index, value, role=QtCore.Qt.DisplayRole):
+    def setData(self, index, value, role=QtCore.Qt.ItemDataRole.DisplayRole):
         if index.column() == 0:
             mode = self.modes[index.row()]
-            self._doc.selection[mode] = value
+            # Views send the check state as an int; store a bool.
+            self._doc.selection[mode] = (QtCore.Qt.CheckState(value) ==
+                                         QtCore.Qt.CheckState.Checked)
         self.dataChanged.emit(index, index)
         return True
 
-    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
+    def headerData(self, section, orientation,
+                   role=QtCore.Qt.ItemDataRole.DisplayRole):
         try:
-            if orientation == QtCore.Qt.Horizontal:
-                if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Orientation.Horizontal:
+                if role == QtCore.Qt.ItemDataRole.DisplayRole:
                     if section == 0:
                         return ""
                     else:
                         return self._doc.params[section-1]
-                elif role == QtCore.Qt.ToolTipRole:
+                elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
                     if section == 0:
                         return "Plot mode"
             else:
-                if role == QtCore.Qt.DisplayRole:
+                if role == QtCore.Qt.ItemDataRole.DisplayRole:
                     return str(self.modes[section])
-                elif role == QtCore.Qt.UserRole:
+                elif role == QtCore.Qt.ItemDataRole.UserRole:
                     return self.modes[section]
         except IndexError:
             return None

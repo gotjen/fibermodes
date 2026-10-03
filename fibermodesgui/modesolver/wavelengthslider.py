@@ -1,37 +1,37 @@
 
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtWidgets
 
 
-class WavelengthSlider(QtGui.QFrame):
+class WavelengthSlider(QtWidgets.QFrame):
 
-    valueChanged = QtCore.pyqtSignal(int)
+    valueChanged = QtCore.Signal(int)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        label = QtGui.QLabel(self.tr("Wavelength"))
+        label = QtWidgets.QLabel(self.tr("Wavelength"))
 
-        self.wavelengthInput = QtGui.QSpinBox()
+        self.wavelengthInput = QtWidgets.QSpinBox()
         self.wavelengthInput.valueChanged.connect(self.changeValue)
 
-        self.totLabel = QtGui.QLabel()
+        self.totLabel = QtWidgets.QLabel()
 
-        self.slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         self.slider.valueChanged.connect(self.changeValue)
 
-        self.wlLabel = QtGui.QLabel()
-        self.vLabel = QtGui.QLabel()
+        self.wlLabel = QtWidgets.QLabel()
+        self.vLabel = QtWidgets.QLabel()
 
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
         hlayout.addWidget(label)
         hlayout.addWidget(self.wavelengthInput)
         hlayout.addWidget(self.totLabel)
 
-        h2layout = QtGui.QHBoxLayout()
+        h2layout = QtWidgets.QHBoxLayout()
         h2layout.addWidget(self.wlLabel)
         h2layout.addWidget(self.vLabel)
 
-        vlayout = QtGui.QVBoxLayout()
+        vlayout = QtWidgets.QVBoxLayout()
         vlayout.addLayout(hlayout)
         vlayout.addWidget(self.slider)
         vlayout.addLayout(h2layout)

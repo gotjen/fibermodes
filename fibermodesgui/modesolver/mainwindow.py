@@ -21,7 +21,7 @@ Python application.
 
 """
 
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtGui, QtWidgets
 from fibermodes import ModeFamily
 from fibermodesgui.widgets import AppWindow, SLRCWidget
 from .solverdocument import SolverDocument
@@ -49,7 +49,7 @@ def msToStr(ms, displayms=True):
     m = ms // 60000
     ms -= m * 60000
     s = ms / 1000
-    fmt = "{:d}:{:02d}:{:05.3f}" if displayms else "{:d}:{:02d}:{:02.0f}"
+    fmt = "{:d}:{:02d}:{:06.3f}" if displayms else "{:d}:{:02d}:{:02.0f}"
     return fmt.format(h, m, s)
 
 
@@ -73,13 +73,13 @@ class ModeSolver(AppWindow):
             'open': (
                 self.tr("&Open"),
                 'document-open',
-                QtGui.QKeySequence.Open,
+                QtGui.QKeySequence.StandardKey.Open,
                 self.actionOpen
             ),
             'save': (
                 self.tr("&Save"),
                 'document-save',
-                QtGui.QKeySequence.Save,
+                QtGui.QKeySequence.StandardKey.Save,
                 self.save),
             'exportcur': (
                 self.tr("&Export current table"),
@@ -90,19 +90,19 @@ class ModeSolver(AppWindow):
             'quit': (
                 self.tr("&Quit"),
                 None,  # 'application-exit',
-                QtGui.QKeySequence.Quit,
+                QtGui.QKeySequence.StandardKey.Quit,
                 self.close
             ),
             'new': (
                 self.tr("&New fiber file"),
                 'document-new',
-                QtGui.QKeySequence.New,
+                QtGui.QKeySequence.StandardKey.New,
                 self.fiberSelector.editFiber
             ),
             'load': (
                 self.tr("&Load fiber file"),
                 'document-open',
-                QtGui.QKeySequence.Open,
+                QtGui.QKeySequence.StandardKey.Open,
                 self.fiberSelector.chooseFiber
             ),
             'edit': (
@@ -281,21 +281,23 @@ class ModeSolver(AppWindow):
         self.wlcalc = None
 
     def _initLayout(self):
-        self.progressBar = QtGui.QProgressBar()
+        self.progressBar = QtWidgets.QProgressBar()
         self.statusBar().addWidget(self.progressBar, 1)
 
-        self.timeLabel = QtGui.QLabel()
-        self.timeLabel.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Sunken)
+        self.timeLabel = QtWidgets.QLabel()
+        self.timeLabel.setFrameShape(QtWidgets.QFrame.Shape.Panel)
+        self.timeLabel.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.statusBar().addPermanentWidget(self.timeLabel)
-        self.time = QtCore.QTime()
+        self.time = QtCore.QElapsedTimer()
         self.timer = QtCore.QTimer(self)
         self.timer.timeout.connect(self.updateTime)
 
-        self.countLabel = QtGui.QLabel(self.tr("No fiber"))
-        self.countLabel.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Sunken)
+        self.countLabel = QtWidgets.QLabel(self.tr("No fiber"))
+        self.countLabel.setFrameShape(QtWidgets.QFrame.Shape.Panel)
+        self.countLabel.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
         self.statusBar().addPermanentWidget(self.countLabel)
 
-        self.splitter = QtGui.QSplitter(self)
+        self.splitter = QtWidgets.QSplitter(self)
         self.splitter.addWidget(self._parametersFrame())
         self.splitter.addWidget(self._modesFrame())
         self.plotFrame = PlotFrame(self)
@@ -321,72 +323,74 @@ class ModeSolver(AppWindow):
         self.wavelengthInput.setSingleStep(1)
         self.wavelengthInput.valueChanged.connect(self.updateWavelengths)
 
-        self.modeSelector = QtGui.QComboBox()
+        self.modeSelector = QtWidgets.QComboBox()
         self.modeSelector.addItems(['vector', 'scalar', 'both'])
         self.modeSelector.currentIndexChanged.connect(self.setMode)
 
-        formLayout = QtGui.QFormLayout()
+        formLayout = QtWidgets.QFormLayout()
         formLayout.addRow(
-            QtGui.QLabel(self.tr("Wavelength")),
+            QtWidgets.QLabel(self.tr("Wavelength")),
             self.wavelengthInput)
         formLayout.addRow(
-            QtGui.QLabel(self.tr("Modes")),
+            QtWidgets.QLabel(self.tr("Modes")),
             self.modeSelector)
 
-        self.nuMaxInput = QtGui.QSpinBox()
+        self.nuMaxInput = QtWidgets.QSpinBox()
         self.nuMaxInput.valueChanged.connect(self.setMaxNu)
         self.nuMaxInput.setRange(-1, 99)
         self.nuMaxInput.setSpecialValueText(" ")
-        self.mMaxInput = QtGui.QSpinBox()
+        self.mMaxInput = QtWidgets.QSpinBox()
         self.mMaxInput.setRange(0, 100)
         self.mMaxInput.valueChanged.connect(self.setMaxM)
         self.mMaxInput.setSpecialValueText(" ")
 
-        simParamFormLayout = QtGui.QHBoxLayout()
+        simParamFormLayout = QtWidgets.QHBoxLayout()
         simParamFormLayout.addWidget(
-            QtGui.QLabel(self.tr("l max")), 0, QtCore.Qt.AlignRight)
+            QtWidgets.QLabel(self.tr("l max")), 0,
+            QtCore.Qt.AlignmentFlag.AlignRight)
         simParamFormLayout.addWidget(self.nuMaxInput)
         simParamFormLayout.addWidget(
-            QtGui.QLabel(self.tr("m max")), 0, QtCore.Qt.AlignRight)
+            QtWidgets.QLabel(self.tr("m max")), 0,
+            QtCore.Qt.AlignmentFlag.AlignRight)
         simParamFormLayout.addWidget(self.mMaxInput)
 
-        simParamLayout = QtGui.QVBoxLayout()
+        simParamLayout = QtWidgets.QVBoxLayout()
         simParamLayout.addLayout(simParamFormLayout)
 
         self.simParamBoxes = {}
         for row in self.PARAMETERS:
-            hlayout = QtGui.QHBoxLayout()
+            hlayout = QtWidgets.QHBoxLayout()
             for param in row:
-                box = QtGui.QCheckBox(param)
+                box = QtWidgets.QCheckBox(param)
                 box.toggled.connect(self.updateParams)
                 hlayout.addWidget(box)
                 self.simParamBoxes[param] = box
             hlayout.addStretch(1)
             simParamLayout.addLayout(hlayout)
 
-        simParamsGroup = QtGui.QGroupBox(self.tr("Simulation Parameters"))
+        simParamsGroup = QtWidgets.QGroupBox(self.tr("Simulation Parameters"))
         simParamsGroup.setLayout(simParamLayout)
 
-        topLayout = QtGui.QVBoxLayout()
-        topLayout.addWidget(QtGui.QLabel(self.tr("Fiber")))
+        topLayout = QtWidgets.QVBoxLayout()
+        topLayout.addWidget(QtWidgets.QLabel(self.tr("Fiber")))
         topLayout.addWidget(self.fiberSelector)
         topLayout.addLayout(formLayout)
         topLayout.addWidget(simParamsGroup)
         topLayout.addStretch(1)
 
-        topFrame = QtGui.QFrame()
+        topFrame = QtWidgets.QFrame()
         topFrame.setLayout(topLayout)
 
-        splitter = QtGui.QSplitter(self)
+        splitter = QtWidgets.QSplitter(self)
         splitter.addWidget(topFrame)
 
         return splitter
 
     def _modesFrame(self):
         self.modeTableModel = ModeTableModel(self.doc, self)
-        self.modeTableProxy = QtGui.QSortFilterProxyModel(self)
+        self.modeTableProxy = QtCore.QSortFilterProxyModel(self)
         self.modeTableProxy.setSourceModel(self.modeTableModel)
-        self.modeTableProxy.setSortRole(QtCore.Qt.UserRole)
+        self.modeTableProxy.setSortRole(QtCore.Qt.ItemDataRole.UserRole)
         self.modeTableProxy.setDynamicSortFilter(True)
         self.modeTableView = ModeTableView(self.modeTableProxy)
         self.modeTableView.selChanged.connect(self.updateUIsel)
@@ -404,16 +408,16 @@ class ModeSolver(AppWindow):
         self.showhidesel.showModes.connect(self.on_show_modes)
         self.showhidesel.hideModes.connect(self.on_hide_modes)
 
-        layout1 = QtGui.QHBoxLayout()
+        layout1 = QtWidgets.QHBoxLayout()
         layout1.addWidget(self.fiberSlider)
         layout1.addWidget(self.wavelengthSlider)
 
-        layout2 = QtGui.QVBoxLayout()
+        layout2 = QtWidgets.QVBoxLayout()
         layout2.addLayout(layout1)
         layout2.addWidget(self.showhidesel)
         layout2.addWidget(self.modeTableView, stretch=1)
 
-        frame = QtGui.QFrame()
+        frame = QtWidgets.QFrame()
         frame.setLayout(layout2)
 
         # Default values
@@ -435,12 +439,14 @@ class ModeSolver(AppWindow):
             return
 
         if not filename:
-            openDialog = QtGui.QFileDialog()
+            openDialog = QtWidgets.QFileDialog()
             openDialog.setWindowTitle(self.tr("Open solver..."))
             openDialog.setDirectory(self._dir)
-            openDialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
+            openDialog.setAcceptMode(
+                QtWidgets.QFileDialog.AcceptMode.AcceptOpen)
             openDialog.setNameFilter(self.tr("Solver (*.solver)"))
-            if openDialog.exec_() == QtGui.QFileDialog.Accepted:
+            if QtWidgets.QDialog.DialogCode(openDialog.exec()) == \
+                    QtWidgets.QDialog.DialogCode.Accepted:
                 filename = openDialog.selectedFiles()[0]
                 self._dir = openDialog.directory()
 
@@ -691,7 +697,7 @@ class ModeSolver(AppWindow):
 
     def simParams(self):
         dlg = SimParamsDialog(self.doc)
-        dlg.exec_()
+        dlg.exec()
         self.doc.numProcs = dlg.numProcs.value()
         self.doc.simulator.delta = float(dlg.delta.text())
 
@@ -704,9 +710,9 @@ class ModeSolver(AppWindow):
     def _show_hide_modes(self, show, what, option):
         nm = self.modeTableModel.rowCount()
         for i in range(nm):
-            mode = self.modeTableModel.headerData(i,
-                                                  QtCore.Qt.Vertical,
-                                                  QtCore.Qt.UserRole)
+            mode = self.modeTableModel.headerData(
+                i, QtCore.Qt.Orientation.Vertical,
+                QtCore.Qt.ItemDataRole.UserRole)
             if (what == 0 or
                     (what == 1 and mode.family is ModeFamily(option+1)) or
                     (what == 2 and mode.nu == option) or
@@ -714,8 +720,9 @@ class ModeSolver(AppWindow):
                 index = self.modeTableModel.index(i, 0)
                 self.modeTableModel.setData(
                     index,
-                    QtCore.Qt.Checked if show else QtCore.Qt.Unchecked,
-                    QtCore.Qt.CheckStateRole)
+                    (QtCore.Qt.CheckState.Checked if show
+                     else QtCore.Qt.CheckState.Unchecked),
+                    QtCore.Qt.ItemDataRole.CheckStateRole)
 
     def togglePanes(self):
         states = [
@@ -743,13 +750,15 @@ class ModeSolver(AppWindow):
         wlnum = self.modeTableModel._wl
         fnum = self.modeTableModel._fnum
 
-        exportDialog = QtGui.QFileDialog()
+        exportDialog = QtWidgets.QFileDialog()
         exportDialog.setWindowTitle(self.tr("Export results"))
         exportDialog.setDirectory(self._dir)
-        exportDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+        exportDialog.setAcceptMode(
+            QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         exportDialog.setNameFilter(self.tr("Comma Separated Values (*.csv)"))
         exportDialog.setDefaultSuffix('csv')
-        if exportDialog.exec_() == QtGui.QFileDialog.Accepted:
+        if QtWidgets.QDialog.DialogCode(exportDialog.exec()) == \
+                QtWidgets.QDialog.DialogCode.Accepted:
             filename = exportDialog.selectedFiles()[0]
             self._dir = exportDialog.directory()
             self.doc.export(filename, wlnum, fnum)
