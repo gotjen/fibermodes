@@ -131,6 +131,10 @@ do, from the `fibermodes` directory: `pip install -e .[gui,test]`.
 Then run `pytest`. To get a coverage report, run `pytest --cov`.
 On a machine without a display, run `QT_QPA_PLATFORM=offscreen pytest`.
 
+Slow matrix tests of the solvers are marked `stress` and are skipped by
+default. Run them with `pytest -m stress` after changes to the solvers
+(they take a few minutes).
+
 
 Building documentation
 ----------------------
