@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from qtpy import QtGui, QtWidgets
 import pyqtgraph as pg
 import numpy
 from math import isinf
@@ -6,7 +6,7 @@ import os.path
 import csv
 
 
-class FiberPlot(QtGui.QFrame):
+class FiberPlot(QtWidgets.QFrame):
 
     """
 
@@ -24,13 +24,13 @@ class FiberPlot(QtGui.QFrame):
         self.plot.scene().sigMouseClicked.connect(self.mouseClickEvent)
         self.dataCurve = self.plot.plot()
         self.curve = self.plot.plot()
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(toolbar)
         layout.addWidget(self.plot)
         self.setLayout(layout)
 
     def initToolbar(self):
-        toolbar = QtGui.QToolBar()
+        toolbar = QtWidgets.QToolBar()
 
         self.foregroundColorButton = pg.ColorButton(color=(255, 255, 255))
         self.foregroundColorButton.sigColorChanged.connect(self.updateCurve)
@@ -42,7 +42,7 @@ class FiberPlot(QtGui.QFrame):
         self.backgroundColorButton.setToolTip(self.tr("Background color"))
         toolbar.addWidget(self.backgroundColorButton)
 
-        self.lineWidthSpinBox = QtGui.QDoubleSpinBox()
+        self.lineWidthSpinBox = QtWidgets.QDoubleSpinBox()
         self.lineWidthSpinBox.setRange(0, 10)
         self.lineWidthSpinBox.setValue(1)
         self.lineWidthSpinBox.setDecimals(1)
@@ -64,7 +64,7 @@ class FiberPlot(QtGui.QFrame):
         self.dataFgColorButton.setEnabled(False)
         toolbar.addWidget(self.dataFgColorButton)
 
-        self.dataLwSpinBox = QtGui.QDoubleSpinBox()
+        self.dataLwSpinBox = QtWidgets.QDoubleSpinBox()
         self.dataLwSpinBox.setRange(0, 10)
         self.dataLwSpinBox.setValue(2)
         self.dataLwSpinBox.setDecimals(1)
@@ -159,12 +159,12 @@ class FiberPlot(QtGui.QFrame):
     def importData(self):
         lastDir = os.path.dirname(self.dataFile)
 
-        filename, selectedFilter = QtGui.QFileDialog.getOpenFileName(
+        filename, selectedFilter = QtWidgets.QFileDialog.getOpenFileName(
             self,
             self.tr("Select data file"),
-            dir=lastDir,
-            filter=self.tr("Comma Separated Values (*.csv);;"
-                           "Tab Separated Values (*.tab)"))
+            lastDir,
+            self.tr("Comma Separated Values (*.csv);;"
+                    "Tab Separated Values (*.tab)"))
         if not filename:
             return
 
@@ -185,14 +185,15 @@ class FiberPlot(QtGui.QFrame):
         self.updateDataCurve()
 
     def deleteData(self):
-        ret = QtGui.QMessageBox.warning(
+        ret = QtWidgets.QMessageBox.warning(
             self,
             self.tr("Remove fiber data"),
             self.tr("Are you sure you want to remove imported fiber data?"),
-            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
-            QtGui.QMessageBox.Yes)
+            QtWidgets.QMessageBox.StandardButton.Yes |
+            QtWidgets.QMessageBox.StandardButton.No,
+            QtWidgets.QMessageBox.StandardButton.Yes)
 
-        if ret == QtGui.QMessageBox.Yes:
+        if ret == QtWidgets.QMessageBox.StandardButton.Yes:
             self.fiberData = None
             self.dataCurve.setData([], [])
             self.dataFgColorButton.setEnabled(False)
