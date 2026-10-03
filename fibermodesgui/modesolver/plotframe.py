@@ -511,3 +511,4 @@ class PlotFrame(QtWidgets.QFrame):
         self.xAxisSelector.setCurrentIndex(int(options['xaxis']))
         self.plotOptions.load(options['options'])
         self.plotModel.load(options['yaxis'])
+        self.updatePlot()
