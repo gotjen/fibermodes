@@ -49,7 +49,7 @@ def msToStr(ms, displayms=True):
     m = ms // 60000
     ms -= m * 60000
     s = ms / 1000
-    fmt = "{:d}:{:02d}:{:05.3f}" if displayms else "{:d}:{:02d}:{:02.0f}"
+    fmt = "{:d}:{:02d}:{:06.3f}" if displayms else "{:d}:{:02d}:{:02.0f}"
     return fmt.format(h, m, s)
 
 
