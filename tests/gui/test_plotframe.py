@@ -181,7 +181,7 @@ def test_save_load_round_trip(frame):
 
 
 def test_load_old_solver_pen_style(frame):
-    """Files saved by the PyQt4 version stored the pen style as an int
+    """Files saved before the Qt6 port stored the pen style as an int
     (hash(Qt.DotLine) == 3)."""
     frame.load({'xaxis': VNUMBER,
                 'options': {'legend': False, 'cutoffs': False,

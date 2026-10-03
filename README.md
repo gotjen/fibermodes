@@ -135,9 +135,10 @@ On a machine without a display, run `QT_QPA_PLATFORM=offscreen pytest`.
 Building documentation
 ----------------------
 
-You need sphinx (and probably a few dependencies to be documented).
+Install the `docs` extra, then run sphinx from the `fibermodes` directory:
 
 ```
+pip install -e .[docs]
 sphinx-build doc doc/_build/html
 ```
 
