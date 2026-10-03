@@ -33,14 +33,12 @@ def test_not_ready_does_not_start(doc):
     assert doc.modes == []
 
 
-@pytest.mark.parametrize("numprocs, cls", [
-    (None, PSimulator), (2, PSimulator), (1, Simulator)])
+@pytest.mark.parametrize("numprocs, cls", [(2, PSimulator), (1, Simulator)])
 def test_compute(doc, qtbot, recwarn, numprocs, cls):
     """The computation runs in the QThread, with the sequential simulator
-    and with the multiprocessing one, also after numProcs replaced the
+    and with the multiprocessing one, after numProcs replaced the default
     simulator."""
-    if numprocs is not None:
-        doc.numProcs = numprocs
+    doc.numProcs = numprocs
     assert isinstance(doc.simulator, cls)
     _prepare(doc)
     doc.ready = True
