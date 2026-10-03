@@ -35,7 +35,7 @@ def test_not_ready_does_not_start(doc):
 
 @pytest.mark.parametrize("numprocs, cls", [
     (None, PSimulator), (2, PSimulator), (1, Simulator)])
-def test_compute(doc, qtbot, numprocs, cls):
+def test_compute(doc, qtbot, recwarn, numprocs, cls):
     """The computation runs in the QThread, with the sequential simulator
     and with the multiprocessing one, also after numProcs replaced the
     simulator."""
@@ -59,6 +59,9 @@ def test_compute(doc, qtbot, numprocs, cls):
     assert len(available) == len(doc.values)
     neff = doc.values[(0, 1, HE11, 0)]
     assert 1.4444 < neff < 1.4489
+    # Fork from the multi-threaded GUI process can deadlock; Python 3.12+
+    # warns about it.
+    assert [w for w in recwarn if "fork" in str(w.message)] == []
 
 
 def test_mode_kind(doc):
