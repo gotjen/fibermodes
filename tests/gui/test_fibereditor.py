@@ -130,7 +130,7 @@ def test_save_as_round_trip(editor, tmp_path, monkeypatch):
         data = json.load(f)
     assert len(data["layers"]) == 3
 
-    editor.actionNew()
+    editor.factory = FiberFactory()
     editor.actionOpen(target)
     assert _layer_names(editor) == ["core", "layer 2", "cladding"]
 
