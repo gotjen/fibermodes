@@ -299,7 +299,9 @@ class FiberEditor(AppWindow):
             self.layerList.addItem(name)
 
         self.actions['remove'].setEnabled(False)
-        self.layerName.setText("")
+        # No layer is selected: do not rename one through textChanged.
+        with blockSignals(self.layerName):
+            self.layerName.setText("")
 
     def selectLayer(self):
         index = self.layerList.currentRow()
