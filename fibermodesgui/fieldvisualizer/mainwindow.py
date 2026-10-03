@@ -156,14 +156,6 @@ class FieldVisualizer(AppWindow):
 
     def updateRange(self, view, rgn):
         pass
-        print()
-        print("view", view.viewRect())
-        print("rgn", rgn)
-        print("graph", self.graph.viewRect())
-        print("image", self.image.viewRect())
-        print("image bound", self.image.boundingRect())
-        print("scene bounding rect", self.image.sceneBoundingRect())
-        print("pixel size", self.image.pixelSize())
 
     def hideEvent(self, event):
         self.options.hide()
