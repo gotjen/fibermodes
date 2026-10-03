@@ -310,6 +310,7 @@ class ModeSolver(AppWindow):
         self.doc.computeStarted.connect(self.initProgressBar)
         self.doc.valueAvailable.connect(self.updateProgressBar)
         self.doc.computeFinished.connect(self.stopProgressBar)
+        self.doc.computeFailed.connect(self.computeFailed)
 
     def _parametersFrame(self):
         self.fiberSelector = FiberSelector(self.doc, self)
@@ -635,6 +636,11 @@ class ModeSolver(AppWindow):
         self.updateTime()
         self.plotFrame.updatePlot()
         self.actions['exportcur'].setEnabled(True)
+
+    def computeFailed(self, message):
+        self.stop_simulation()
+        self.statusBar().showMessage(
+            self.tr("Computation failed: {}").format(message))
 
     def updateTime(self):
         elapsed = self.time.elapsed()

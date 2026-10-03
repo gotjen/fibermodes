@@ -2,6 +2,7 @@
 from qtpy import QtCore
 from fibermodes import FiberFactory, Simulator, PSimulator, Mode
 import csv
+import logging
 
 
 class SolverDocument(QtCore.QThread):
@@ -10,6 +11,9 @@ class SolverDocument(QtCore.QThread):
     modesAvailable = QtCore.Signal(int)  # fiber num
     valueAvailable = QtCore.Signal(int, int, object, int)
     computeFinished = QtCore.Signal()
+    computeFailed = QtCore.Signal(str)  # error message
+
+    logger = logging.getLogger(__name__)
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -148,10 +152,21 @@ class SolverDocument(QtCore.QThread):
         super().start()
 
     def run(self):
+        self.running = True
+        self._step = "modes"
+        try:
+            self._compute()
+        except Exception as exc:
+            # Report the error instead of ending the thread silently.
+            self.logger.exception("Computation of %s failed", self._step)
+            self.running = False
+            self.simulator.terminate()
+            self.computeFailed.emit("{}: {}".format(self._step, exc))
+
+    def _compute(self):
         self.modes = []
         self.values = {}
         self.toCompute = 0
-        self.running = True
         for fnum, resultf in enumerate(self.simulator.modes()):
             self.modes.append(resultf)
             self.modesAvailable.emit(fnum)
@@ -162,6 +177,7 @@ class SolverDocument(QtCore.QThread):
             self.computeStarted.emit()
 
             for j, p in enumerate(self.params):
+                self._step = p
                 fct = getattr(self.simulator, self.PARAMFCT[p])
 
                 for fnum, resultf in enumerate(fct()):
