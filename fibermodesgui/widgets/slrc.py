@@ -1,22 +1,22 @@
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtGui, QtWidgets
 from decimal import Decimal
 from fibermodes.slrc import SLRC
 from fibermodesgui import blockSignals
 
 
-class SLRCWidget(QtGui.QFrame, SLRC):
+class SLRCWidget(QtWidgets.QFrame, SLRC):
 
-    valueChanged = QtCore.pyqtSignal(object)
+    valueChanged = QtCore.Signal(object)
 
-    def __init__(self, parent=None, f=QtCore.Qt.Widget):
-        QtGui.QFrame.__init__(self, parent, f)
+    def __init__(self, parent=None, f=QtCore.Qt.WindowType.Widget):
+        QtWidgets.QFrame.__init__(self, parent, f)
         SLRC.__init__(self)
         self.scale = 1.
 
-        self.innerLayout = QtGui.QHBoxLayout()
+        self.innerLayout = QtWidgets.QHBoxLayout()
 
         self._initTypeButton()
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addLayout(self.innerLayout)
         layout.addWidget(self.typeButton)
         self.setLayout(layout)
@@ -38,14 +38,15 @@ class SLRCWidget(QtGui.QFrame, SLRC):
         self.codeAction = QtGui.QAction("code", self)
         self.codeAction.triggered.connect(self.setCodeLayout)
 
-        self.typeMenu = QtGui.QMenu()
+        self.typeMenu = QtWidgets.QMenu()
         self.typeMenu.addAction(self.scalarAction)
         self.typeMenu.addAction(self.listAction)
         self.typeMenu.addAction(self.rangeAction)
         self.typeMenu.addAction(self.codeAction)
 
-        self.typeButton = QtGui.QToolButton()
-        self.typeButton.setPopupMode(QtGui.QToolButton.InstantPopup)
+        self.typeButton = QtWidgets.QToolButton()
+        self.typeButton.setPopupMode(
+            QtWidgets.QToolButton.ToolButtonPopupMode.InstantPopup)
         self.typeButton.setMenu(self.typeMenu)
 
     def _setType(self, kind, check=True):
@@ -62,7 +63,7 @@ class SLRCWidget(QtGui.QFrame, SLRC):
         return True
 
     def _initScalarControl(self):
-        self.numberInput = QtGui.QDoubleSpinBox()
+        self.numberInput = QtWidgets.QDoubleSpinBox()
         self.numberInput.valueChanged.connect(self._updateScalarValue)
         self.innerLayout.addWidget(self.numberInput)
         self.numberInput.setValue(self._value * self.scale)
@@ -77,8 +78,8 @@ class SLRCWidget(QtGui.QFrame, SLRC):
         self.numberInput.setValue(self._value * self.scale)
 
     def _initListControl(self):
-        self.listLabel = QtGui.QLabel()
-        self.listButton = QtGui.QPushButton(self.tr("Edit"))
+        self.listLabel = QtWidgets.QLabel()
+        self.listButton = QtWidgets.QPushButton(self.tr("Edit"))
         self.listButton.clicked.connect(self.editList)
 
     def setListLayout(self, check=True):
@@ -94,19 +95,20 @@ class SLRCWidget(QtGui.QFrame, SLRC):
     def editList(self):
         oldvals = [v * self.scale for v in self._value]
         ledialog = ListEditor(oldvals.copy())
-        ret = ledialog.exec_()
-        if ret == QtGui.QDialog.Accepted:
+        ret = ledialog.exec()
+        if QtWidgets.QDialog.DialogCode(ret) == \
+                QtWidgets.QDialog.DialogCode.Accepted:
             if oldvals != ledialog.numlist:
                 self._value = [v / self.scale for v in ledialog.numlist]
                 self._updateListCount()
                 self._emitValueChanged()
 
     def _initRangeControl(self):
-        self.rstartInput = QtGui.QDoubleSpinBox()
+        self.rstartInput = QtWidgets.QDoubleSpinBox()
         self.rstartInput.valueChanged.connect(self._updateRange)
-        self.rendInput = QtGui.QDoubleSpinBox()
+        self.rendInput = QtWidgets.QDoubleSpinBox()
         self.rendInput.valueChanged.connect(self._updateRange)
-        self.rnumInput = QtGui.QSpinBox()
+        self.rnumInput = QtWidgets.QSpinBox()
         self.rnumInput.setValue(10)
         self.rnumInput.setRange(1, 32000)
         self.rnumInput.valueChanged.connect(self._updateRange)
@@ -131,7 +133,7 @@ class SLRCWidget(QtGui.QFrame, SLRC):
             self.rnumInput.setValue(self._value['num'])
 
     def _initCodeControl(self):
-        self.codeButton = QtGui.QPushButton(self.tr("Edit code"))
+        self.codeButton = QtWidgets.QPushButton(self.tr("Edit code"))
         self.codeButton.clicked.connect(self.editCode)
 
     def setCodeLayout(self, check=True):
@@ -140,8 +142,9 @@ class SLRCWidget(QtGui.QFrame, SLRC):
 
     def editCode(self):
         cedialog = CodeEditor(self._value, self.codeParams)
-        ret = cedialog.exec_()
-        if ret == QtGui.QDialog.Accepted:
+        ret = cedialog.exec()
+        if QtWidgets.QDialog.DialogCode(ret) == \
+                QtWidgets.QDialog.DialogCode.Accepted:
             if self._value != cedialog.code:
                 self._value = cedialog.code
                 self._emitValueChanged()
@@ -203,56 +206,58 @@ class SLRCWidget(QtGui.QFrame, SLRC):
         self.scale = value
 
 
-class ListEditor(QtGui.QDialog):
+class ListEditor(QtWidgets.QDialog):
 
-    def __init__(self, numlist, parent=None, f=0):
+    def __init__(self, numlist, parent=None,
+                 f=QtCore.Qt.WindowType.Widget):
         super().__init__(parent, f)
         self.numlist = numlist
         self.setWindowTitle(self.tr("List Editor"))
 
-        self.numbersList = QtGui.QListWidget()
+        self.numbersList = QtWidgets.QListWidget()
         for n in self.numlist:
-            item = QtGui.QListWidgetItem(str(n))
-            item.setFlags(QtCore.Qt.ItemIsSelectable |
-                          QtCore.Qt.ItemIsEditable |
-                          QtCore.Qt.ItemIsEnabled)
+            item = QtWidgets.QListWidgetItem(str(n))
+            item.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable |
+                          QtCore.Qt.ItemFlag.ItemIsEditable |
+                          QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.numbersList.addItem(item)
         self.numbersList.setCurrentRow(0)
         self.numbersList.setEditTriggers(
-            QtGui.QAbstractItemView.AllEditTriggers)
+            QtWidgets.QAbstractItemView.EditTrigger.AllEditTriggers)
         self.numbersList.itemChanged.connect(self.itemChanged)
 
-        buttonAdd = QtGui.QPushButton(
+        buttonAdd = QtWidgets.QPushButton(
             QtGui.QIcon.fromTheme('list-add'), "")
         buttonAdd.clicked.connect(self.addItem)
-        buttonEdit = QtGui.QPushButton(self.tr("&Edit"))
+        buttonEdit = QtWidgets.QPushButton(self.tr("&Edit"))
         buttonEdit.clicked.connect(self.editItem)
-        self.buttonRemove = QtGui.QPushButton(
+        self.buttonRemove = QtWidgets.QPushButton(
             QtGui.QIcon.fromTheme('list-remove'), "")
         if len(self.numlist) == 1:
             self.buttonRemove.setEnabled(False)
         self.buttonRemove.clicked.connect(self.removeItem)
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
-                                           QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok |
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel)
         buttonBox.addButton(buttonAdd,
-                            QtGui.QDialogButtonBox.ActionRole)
+                            QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
         buttonBox.addButton(buttonEdit,
-                            QtGui.QDialogButtonBox.ActionRole)
+                            QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
         buttonBox.addButton(self.buttonRemove,
-                            QtGui.QDialogButtonBox.ActionRole)
+                            QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.numbersList)
         layout.addWidget(buttonBox)
         self.setLayout(layout)
 
     def addItem(self):
-        item = QtGui.QListWidgetItem()
-        item.setFlags(QtCore.Qt.ItemIsSelectable |
-                      QtCore.Qt.ItemIsEditable |
-                      QtCore.Qt.ItemIsEnabled)
+        item = QtWidgets.QListWidgetItem()
+        item.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable |
+                      QtCore.Qt.ItemFlag.ItemIsEditable |
+                      QtCore.Qt.ItemFlag.ItemIsEnabled)
         row = self.numbersList.currentRow()
         v1 = Decimal(self.numbersList.item(row).text())
         if row + 1 < self.numbersList.count():
@@ -292,28 +297,30 @@ class ListEditor(QtGui.QDialog):
             item.setText(str(self.numlist[row]))
 
 
-class CodeEditor(QtGui.QDialog):
+class CodeEditor(QtWidgets.QDialog):
 
-    def __init__(self, code, params, parent=None, f=0):
+    def __init__(self, code, params, parent=None,
+                 f=QtCore.Qt.WindowType.Widget):
         super().__init__(parent, f)
         self.code = code
 
-        self.codeEditor = QtGui.QPlainTextEdit()
+        self.codeEditor = QtWidgets.QPlainTextEdit()
         fixedFont = QtGui.QFont("Monospace")
-        fixedFont.setStyleHint(QtGui.QFont.TypeWriter)
+        fixedFont.setStyleHint(QtGui.QFont.StyleHint.TypeWriter)
         self.codeEditor.setFont(fixedFont)
         self.codeEditor.setPlainText(code)
         self.codeEditor.textChanged.connect(self.onTextChanged)
 
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok |
-                                           QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok |
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
 
         paramstr = ", ".join(params) if params else "*params"
 
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(QtGui.QLabel("def f({}):".format(paramstr)))
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(QtWidgets.QLabel("def f({}):".format(paramstr)))
         layout.addWidget(self.codeEditor)
         layout.addWidget(buttonBox)
         self.setLayout(layout)

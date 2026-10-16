@@ -22,14 +22,13 @@ user interface.
 """
 
 import sys
-from PyQt4 import QtCore, QtGui
+from qtpy import QtWidgets
 
 from fibermodesgui.modesolver.mainwindow import ModeSolver
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    QtCore.QTextCodec.setCodecForTr(QtCore.QTextCodec.codecForName('UTF-8'))
+    app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Mode Solver')
 
     win = ModeSolver()
@@ -37,7 +36,7 @@ def main():
         win.actionOpen(sys.argv[1])
     win.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()

@@ -20,8 +20,8 @@
 """
 
 import json
+import re
 import time
-from distutils.version import StrictVersion as Version
 from operator import mul
 from functools import reduce
 from itertools import product, islice
@@ -34,6 +34,22 @@ from fibermodes.fiber.material.compmaterial import CompMaterial
 
 
 __version__ = "0.0.1"
+
+_VERSION_RE = re.compile(r"^(\d+)\.(\d+)(?:\.(\d+))?$")
+
+
+def _version_tuple(vstring):
+    """Parse a ``major.minor[.patch]`` version string into a comparable tuple.
+
+    Replacement for ``distutils.version.StrictVersion`` (``distutils`` was
+    removed in Python 3.12). As with ``StrictVersion``, a missing patch
+    number counts as 0, and an invalid string raises :py:exc:`ValueError`.
+
+    """
+    match = _VERSION_RE.match(vstring)
+    if match is None:
+        raise ValueError("invalid version number '{}'".format(vstring))
+    return tuple(int(g) if g is not None else 0 for g in match.groups())
 
 
 class FiberFactoryValidationError(Exception):
@@ -341,11 +357,11 @@ class FiberFactory(object):
                 raise FiberFactoryValidationError(
                     "Missing '{}' parameter".format(key))
 
-        if Version(obj["version"]) > Version(__version__):
+        if _version_tuple(obj["version"]) > _version_tuple(__version__):
             raise FiberFactoryValidationError("Version of loaded object "
                                               "is higher that version "
                                               "of current library")
-        elif Version(obj["version"]) < Version(__version__):
+        elif _version_tuple(obj["version"]) < _version_tuple(__version__):
             self._upgrade(obj)
 
         for layernum, layer in enumerate(obj["layers"], 1):

@@ -1,15 +1,15 @@
 
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtWidgets
 import os
 from datetime import datetime
 from string import Template
 from fibermodesgui.fibereditor.mainwindow import FiberEditor
 
 
-class FiberSelector(QtGui.QFrame):
+class FiberSelector(QtWidgets.QFrame):
 
-    fileLoaded = QtCore.pyqtSignal()
-    fiberEdited = QtCore.pyqtSignal()
+    fileLoaded = QtCore.Signal()
+    fiberEdited = QtCore.Signal()
 
     def __init__(self, doc, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
@@ -17,25 +17,25 @@ class FiberSelector(QtGui.QFrame):
         self._doc = doc
         self._editWin = None
 
-        self.fiberName = QtGui.QLabel(self.tr("<i>Select fiber...</i>"))
-        self.fiberName.setTextFormat(QtCore.Qt.RichText)
+        self.fiberName = QtWidgets.QLabel(self.tr("<i>Select fiber...</i>"))
+        self.fiberName.setTextFormat(QtCore.Qt.TextFormat.RichText)
 
-        self.chooseButton = QtGui.QPushButton(
+        self.chooseButton = QtWidgets.QPushButton(
             parent.getIcon('document-open'),
             self.tr("Choose"))
         self.chooseButton.clicked.connect(self.chooseFiber)
 
-        self.editButton = QtGui.QPushButton(parent.getIcon('document-new'),
-                                            self.tr("New"))
+        self.editButton = QtWidgets.QPushButton(
+            parent.getIcon('document-new'), self.tr("New"))
         self.editButton.clicked.connect(self.editFiber)
 
-        self.propButton = QtGui.QPushButton(
+        self.propButton = QtWidgets.QPushButton(
             parent.getIcon('info'),
             "")
         self.propButton.setEnabled(False)
         self.propButton.clicked.connect(self.fiberProperties)
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.fiberName)
         layout.addWidget(self.chooseButton)
         layout.addWidget(self.editButton)
@@ -58,12 +58,13 @@ class FiberSelector(QtGui.QFrame):
                    if self._doc.filename
                    else os.getcwd())
 
-        openDialog = QtGui.QFileDialog()
+        openDialog = QtWidgets.QFileDialog()
         openDialog.setWindowTitle(self.tr("Open fiber..."))
         openDialog.setDirectory(dirname)
-        openDialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
+        openDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptOpen)
         openDialog.setNameFilter(self.tr("Fibers (*.fiber)"))
-        if openDialog.exec_() == QtGui.QFileDialog.Accepted:
+        if QtWidgets.QDialog.DialogCode(openDialog.exec()) == \
+                QtWidgets.QDialog.DialogCode.Accepted:
             self._doc.filename = openDialog.selectedFiles()[0]
             self.fileLoaded.emit()
 
@@ -100,10 +101,10 @@ class FiberSelector(QtGui.QFrame):
                     self._doc.factory.tstamp).strftime('%Y-%m-%d %H:%M:%S'),
                  description=self._doc.factory.description)
 
-        msgBox = QtGui.QMessageBox()
+        msgBox = QtWidgets.QMessageBox()
         msgBox.setWindowTitle(self.tr("Fiber Properties"))
         msgBox.setText(propTemplate)
-        msgBox.exec_()
+        msgBox.exec()
 
     def editorClosed(self):
         self._editWin = None

@@ -39,4 +39,7 @@ class SellmeierComp(Sellmeier, CompMaterial):
         Bp = numpy.array(M2.B) - B
         C = numpy.array(M1.C)
         Cp = numpy.array(M2.C) - C
-        return cls._n(wl, B + x * Bp, C + x * Cp)
+        # Pass Python floats, not numpy.float64: since Python 3.12, sum()
+        # uses compensated summation only for exact float terms, so this
+        # keeps n(wl, 0) identical to the pure material's n(wl).
+        return cls._n(wl, (B + x * Bp).tolist(), (C + x * Cp).tolist())

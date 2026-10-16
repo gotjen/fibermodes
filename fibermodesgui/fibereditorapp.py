@@ -16,14 +16,13 @@
 # along with FiberModes.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from PyQt4 import QtCore, QtGui
+from qtpy import QtWidgets
 
 from fibermodesgui.fibereditor.mainwindow import FiberEditor
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    QtCore.QTextCodec.setCodecForTr(QtCore.QTextCodec.codecForName('UTF-8'))
+    app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Fiber Editor')
 
     win = FiberEditor()
@@ -31,7 +30,7 @@ def main():
         win.actionOpen(sys.argv[1])
     win.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()

@@ -19,14 +19,14 @@ import sys
 from fibermodes import Wavelength
 from fibermodes.fiber import material
 from fibermodesgui import blockSignals
-from PyQt4 import QtCore, QtGui
+from qtpy import QtCore, QtWidgets
 
 
-class MaterialCalculator(QtGui.QDialog):
+class MaterialCalculator(QtWidgets.QDialog):
 
-    hidden = QtCore.pyqtSignal()
+    hidden = QtCore.Signal()
 
-    def __init__(self, parent=None, f=QtCore.Qt.Widget):
+    def __init__(self, parent=None, f=QtCore.Qt.WindowType.Widget):
         super().__init__(parent, f)
         self.wl = Wavelength(1550e-9)
         self.conc = 0
@@ -36,19 +36,20 @@ class MaterialCalculator(QtGui.QDialog):
 
         self.setWindowTitle(self.tr("Material Calculator"))
 
-        glayout = QtGui.QGridLayout()
-        ilayout = QtGui.QVBoxLayout()
+        glayout = QtWidgets.QGridLayout()
+        ilayout = QtWidgets.QVBoxLayout()
 
-        mlabel = QtGui.QLabel(self.tr("Material"))
-        self.matinput = QtGui.QComboBox()
+        mlabel = QtWidgets.QLabel(self.tr("Material"))
+        self.matinput = QtWidgets.QComboBox()
         self.matinput.addItems([m for m in material.__all__ if m != "Fixed"])
         self.matinput.currentIndexChanged.connect(self.selectMaterial)
         mlabel.setBuddy(self.matinput)
-        glayout.addWidget(mlabel, 0, 0, alignment=QtCore.Qt.AlignRight)
+        glayout.addWidget(mlabel, 0, 0,
+                          alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         glayout.addWidget(self.matinput, 0, 1)
 
-        wlabel = QtGui.QLabel(self.tr("Wavelength"))
-        self.winput = QtGui.QDoubleSpinBox()
+        wlabel = QtWidgets.QLabel(self.tr("Wavelength"))
+        self.winput = QtWidgets.QDoubleSpinBox()
         self.winput.setDecimals(3)
         self.winput.setRange(1, 50000)
         self.winput.setSingleStep(1)
@@ -56,11 +57,12 @@ class MaterialCalculator(QtGui.QDialog):
         self.winput.setSuffix(" nm")
         self.winput.valueChanged.connect(self.wavelengthChanged)
         wlabel.setBuddy(self.winput)
-        glayout.addWidget(wlabel, 1, 0, alignment=QtCore.Qt.AlignRight)
+        glayout.addWidget(wlabel, 1, 0,
+                          alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         glayout.addWidget(self.winput, 1, 1)
 
-        clabel = QtGui.QLabel(self.tr("Concentration"))
-        self.cinput = QtGui.QDoubleSpinBox()
+        clabel = QtWidgets.QLabel(self.tr("Concentration"))
+        self.cinput = QtWidgets.QDoubleSpinBox()
         self.cinput.setDecimals(4)
         self.cinput.setRange(0, 100)
         self.cinput.setSingleStep(1)
@@ -68,27 +70,29 @@ class MaterialCalculator(QtGui.QDialog):
         self.cinput.setValue(self.conc * 100)
         self.cinput.valueChanged.connect(self.concentrationChanged)
         clabel.setBuddy(self.cinput)
-        glayout.addWidget(clabel, 2, 0, alignment=QtCore.Qt.AlignRight)
+        glayout.addWidget(clabel, 2, 0,
+                          alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         glayout.addWidget(self.cinput, 2, 1)
 
-        ilabel = QtGui.QLabel(self.tr("Index"))
-        self.iinput = QtGui.QDoubleSpinBox()
+        ilabel = QtWidgets.QLabel(self.tr("Index"))
+        self.iinput = QtWidgets.QDoubleSpinBox()
         self.iinput.setDecimals(6)
         self.iinput.setRange(1, 10)
         self.iinput.setSingleStep(1e-3)
         self.iinput.valueChanged.connect(self.indexChanged)
         ilabel.setBuddy(self.iinput)
-        glayout.addWidget(ilabel, 3, 0, alignment=QtCore.Qt.AlignRight)
+        glayout.addWidget(ilabel, 3, 0,
+                          alignment=QtCore.Qt.AlignmentFlag.AlignRight)
         glayout.addWidget(self.iinput, 3, 1)
 
-        # infolabel = QtGui.QLabel(self.tr("<b>Info</b>"))
+        # infolabel = QtWidgets.QLabel(self.tr("<b>Info</b>"))
         # ilayout.addWidget(infolabel)
-        self.infotext = QtGui.QTextEdit()
+        self.infotext = QtWidgets.QTextEdit()
         self.infotext.setReadOnly(True)
         ilayout.addWidget(self.infotext)
         ilayout.addStretch(1)
 
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addLayout(glayout)
         layout.addLayout(ilayout)
         self.setLayout(layout)
@@ -157,14 +161,13 @@ class MaterialCalculator(QtGui.QDialog):
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    QtCore.QTextCodec.setCodecForTr(QtCore.QTextCodec.codecForName('UTF-8'))
+    app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Material Calculator')
 
     win = MaterialCalculator()
     win.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()

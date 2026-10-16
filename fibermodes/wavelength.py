@@ -69,7 +69,7 @@ class Wavelength(float):
 
     @property
     def k0(self):
-        """Wave number (:math:`2 \pi / \lambda`)."""
+        r"""Wave number (:math:`2 \pi / \lambda`)."""
         return tpi / self if self != 0 else float("inf")
 
     @property

@@ -23,7 +23,7 @@ from fibermodes import FiberFactory, HE11
 from fibermodes.field import Field
 import numpy
 
-__dir__, _ = os.path.split(__file__)
+_HERE, _ = os.path.split(__file__)
 
 
 class TestField(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestField(unittest.TestCase):
     """
 
     def setUp(self):
-        f = FiberFactory(os.path.join(__dir__, 'fiber/smf28.fiber'))
+        f = FiberFactory(os.path.join(_HERE, 'fiber/smf28.fiber'))
         fiber = f[0]
         self.field = Field(fiber, HE11, 1550e-9, 50e-6)
 

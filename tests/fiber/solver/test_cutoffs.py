@@ -17,12 +17,14 @@
 
 import unittest
 
+import pytest
+
 from fibermodes import FiberFactory, Mode, ModeFamily, HE11
 from itertools import zip_longest
 from math import isnan
 
 
-class TestCutoffs(unittest.TestCase):
+class _CutoffsMixin:
 
     """Systematic tests for cutoff values.
 
@@ -62,6 +64,25 @@ class TestCutoffs(unittest.TestCase):
 
                     pco = co
 
+
+class TestCutoffs(_CutoffsMixin, unittest.TestCase):
+
+    """One three-layer profile, to exercise the cutoff solve path.
+
+    TestCutoffsStress runs all profiles (about 80 s). Run it with
+    ``pytest -m stress`` after changes to the solvers.
+
+    """
+
+    def testCase4(self):
+        self._testFiberCutoffs(r=[4e-6, 10e-6], n=[1.4444, 1.4489, 1.4474])
+
+
+@pytest.mark.stress
+class TestCutoffsStress(_CutoffsMixin, unittest.TestCase):
+
+    """All step-index profiles: order of HE / EH cutoffs and b near cutoff."""
+
     def testProfileA(self):
         self._testFiberCutoffs(r=[4e-6, 6e-6], n=[1.47, 1.43, 1.44])
 
@@ -91,9 +112,6 @@ class TestCutoffs(unittest.TestCase):
 
     def testCase3(self):
         self._testFiberCutoffs(r=[4e-6, 10e-6], n=[1.4474, 1.4489, 1.4444])
-
-    def testCase4(self):
-        self._testFiberCutoffs(r=[4e-6, 10e-6], n=[1.4444, 1.4489, 1.4474])
 
     def testCase5(self):
         self._testFiberCutoffs(r=[10e-6, 16e-6], n=[1.4489, 1.4444, 1.4474])

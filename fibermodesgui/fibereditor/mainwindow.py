@@ -1,5 +1,5 @@
 
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtGui, QtWidgets
 from fibermodes import FiberFactory
 from fibermodes.fiber import material, geometry
 from fibermodesgui import util, blockSignals
@@ -25,31 +25,31 @@ class FiberEditor(AppWindow):
             'new': (
                 self.tr("&New"),
                 'document-new',
-                QtGui.QKeySequence.New,
+                QtGui.QKeySequence.StandardKey.New,
                 self.actionNew
             ),
             'open': (
                 self.tr("&Open"),
                 'document-open',
-                QtGui.QKeySequence.Open,
+                QtGui.QKeySequence.StandardKey.Open,
                 self.actionOpen
             ),
             'save': (
                 self.tr("&Save"),
                 'document-save',
-                QtGui.QKeySequence.Save,
+                QtGui.QKeySequence.StandardKey.Save,
                 self.save
             ),
             'saveas': (
                 self.tr("Save &As..."),
                 'document-save-as',
-                QtGui.QKeySequence.SaveAs,
+                QtGui.QKeySequence.StandardKey.SaveAs,
                 self.actionSaveAs
             ),
             'quit': (
                 self.tr("&Quit"),
                 None,  # 'application-exit',
-                QtGui.QKeySequence.Quit,
+                QtGui.QKeySequence.StandardKey.Quit,
                 self.close
             ),
             'info': (
@@ -119,12 +119,14 @@ class FiberEditor(AppWindow):
             return
 
         if not filename:
-            openDialog = QtGui.QFileDialog()
+            openDialog = QtWidgets.QFileDialog()
             openDialog.setWindowTitle(self.tr("Open fiber..."))
             openDialog.setDirectory(self._dir)
-            openDialog.setAcceptMode(QtGui.QFileDialog.AcceptOpen)
+            openDialog.setAcceptMode(
+                QtWidgets.QFileDialog.AcceptMode.AcceptOpen)
             openDialog.setNameFilter(self.tr("Fibers (*.fiber)"))
-            if openDialog.exec_() == QtGui.QFileDialog.Accepted:
+            if QtWidgets.QDialog.DialogCode(openDialog.exec()) == \
+                    QtWidgets.QDialog.DialogCode.Accepted:
                 filename = openDialog.selectedFiles()[0]
                 self._dir = openDialog.directory()
 
@@ -158,19 +160,20 @@ class FiberEditor(AppWindow):
         super().save()
 
     def actionSaveAs(self):
-        saveDialog = QtGui.QFileDialog()
+        saveDialog = QtWidgets.QFileDialog()
         saveDialog.setWindowTitle(self.tr("Save fibers as..."))
         saveDialog.setDirectory(self._dir)
-        saveDialog.setAcceptMode(QtGui.QFileDialog.AcceptSave)
+        saveDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         saveDialog.setNameFilter(self.tr("Fibers (*.fiber)"))
         saveDialog.setDefaultSuffix('fiber')
-        if saveDialog.exec_() == QtGui.QFileDialog.Accepted:
+        if QtWidgets.QDialog.DialogCode(saveDialog.exec()) == \
+                QtWidgets.QDialog.DialogCode.Accepted:
             self.setDocumentName(saveDialog.selectedFiles()[0])
             self.save()
             self._dir = saveDialog.directory()
 
     def actionInfo(self):
-        FiberPropertiesWindow(self.factory._fibers, self).exec_()
+        FiberPropertiesWindow(self.factory._fibers, self).exec()
 
     def actionAddLayer(self):
         self.addLayer()
@@ -186,68 +189,68 @@ class FiberEditor(AppWindow):
         self.updateInfo()
 
     def _initLayout(self):
-        self.layerName = QtGui.QLineEdit()
+        self.layerName = QtWidgets.QLineEdit()
         self.layerName.textChanged.connect(self.changeLayerName)
         self.layerName.setEnabled(False)
 
-        self.layerList = QtGui.QListWidget()
+        self.layerList = QtWidgets.QListWidget()
         self.layerList.itemSelectionChanged.connect(self.selectLayer)
         self.layerList.itemActivated.connect(self.actLayerName)
         self.initLayerList()
 
-        layout1 = QtGui.QVBoxLayout()
-        layout1.addWidget(QtGui.QLabel(self.tr("Fiber layers:")))
+        layout1 = QtWidgets.QVBoxLayout()
+        layout1.addWidget(QtWidgets.QLabel(self.tr("Fiber layers:")))
         layout1.addWidget(self.layerList)
-        frame1 = QtGui.QFrame()
+        frame1 = QtWidgets.QFrame()
         frame1.setLayout(layout1)
 
-        lnFormLayout = QtGui.QFormLayout()
-        lnFormLayout.addRow(QtGui.QLabel(self.tr("Layer name:")),
+        lnFormLayout = QtWidgets.QFormLayout()
+        lnFormLayout.addRow(QtWidgets.QLabel(self.tr("Layer name:")),
                             self.layerName)
 
-        l2splitter = QtGui.QSplitter(QtCore.Qt.Vertical)
+        l2splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         l2splitter.addWidget(self._initGeomFrame())
         l2splitter.addWidget(self._initMatFrame())
-        layout2 = QtGui.QVBoxLayout()
+        layout2 = QtWidgets.QVBoxLayout()
         layout2.addLayout(lnFormLayout)
         layout2.addWidget(l2splitter)
-        frame2 = QtGui.QFrame()
+        frame2 = QtWidgets.QFrame()
         frame2.setLayout(layout2)
 
-        self.wlInput = QtGui.QDoubleSpinBox()
+        self.wlInput = QtWidgets.QDoubleSpinBox()
         self.wlInput.setSuffix(" nm")
         self.wlInput.setRange(500, 3000)
         self.wlInput.setSingleStep(1)
         self.wlInput.setValue(1550)
         self.wlInput.valueChanged.connect(self.wlChanged)
-        self.fnumInput = QtGui.QSpinBox()
+        self.fnumInput = QtWidgets.QSpinBox()
         self.fnumInput.setValue(1)
         self.fnumInput.setMinimum(1)
         self.fnumInput.setMaximum(len(self.factory))
         self.fnumInput.valueChanged.connect(self.fnumChanged)
-        wlForm = QtGui.QFormLayout()
-        wlForm.addRow(QtGui.QLabel(self.tr("Wavelength:")),
+        wlForm = QtWidgets.QFormLayout()
+        wlForm.addRow(QtWidgets.QLabel(self.tr("Wavelength:")),
                       self.wlInput)
-        wlForm.addRow(QtGui.QLabel(self.tr("Fiber #")),
+        wlForm.addRow(QtWidgets.QLabel(self.tr("Fiber #")),
                       self.fnumInput)
-        self.fnumSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.fnumSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
         self.fnumSlider.setValue(self.fnumInput.value())
         self.fnumSlider.setMinimum(1)
         self.fnumSlider.setMaximum(self.fnumInput.maximum())
         self.fnumSlider.valueChanged.connect(self.fnumChanged)
         self.infoTable = FiberInfoTable()
         self.fiberPlot = FiberPlot()
-        infoTab = QtGui.QTabWidget()
+        infoTab = QtWidgets.QTabWidget()
         infoTab.addTab(self.infoTable, self.tr("Info"))
         infoTab.addTab(self.fiberPlot, self.tr("Graph"))
-        layout3 = QtGui.QVBoxLayout()
+        layout3 = QtWidgets.QVBoxLayout()
         layout3.addLayout(wlForm)
         layout3.addWidget(self.fnumSlider)
         layout3.addWidget(infoTab)
-        frame3 = QtGui.QFrame()
+        frame3 = QtWidgets.QFrame()
         frame3.setLayout(layout3)
 
-        splitter = QtGui.QSplitter(self)
+        splitter = QtWidgets.QSplitter(self)
         splitter.addWidget(frame1)
         splitter.addWidget(frame2)
         splitter.addWidget(frame3)
@@ -255,34 +258,34 @@ class FiberEditor(AppWindow):
         self.setCentralWidget(splitter)
 
     def _initGeomFrame(self):
-        self.geomType = QtGui.QComboBox()
+        self.geomType = QtWidgets.QComboBox()
         self.geomType.addItems(geometry.__all__)
         self.geomType.setEnabled(False)
         self.geomType.setCurrentIndex(-1)
         self.geomType.currentIndexChanged.connect(self.selectGeomType)
-        self.geomLayout = QtGui.QFormLayout()
-        self.geomLayout.addRow(QtGui.QLabel(self.tr("Geometry type:")),
+        self.geomLayout = QtWidgets.QFormLayout()
+        self.geomLayout.addRow(QtWidgets.QLabel(self.tr("Geometry type:")),
                                self.geomType)
-        geomFrame = QtGui.QGroupBox(self.tr("Geometry"))
+        geomFrame = QtWidgets.QGroupBox(self.tr("Geometry"))
         geomFrame.setLayout(self.geomLayout)
         return geomFrame
 
     def _initMatFrame(self):
-        self.matType = QtGui.QComboBox()
+        self.matType = QtWidgets.QComboBox()
         self.matType.addItems(material.__all__)
         self.matType.setEnabled(False)
         self.matType.setCurrentIndex(-1)
         self.matType.currentIndexChanged.connect(self.selectMatType)
-        self.matPropBut = QtGui.QPushButton(self.getIcon('info'), "")
+        self.matPropBut = QtWidgets.QPushButton(self.getIcon('info'), "")
         self.matPropBut.clicked.connect(self.aboutFiberMaterial)
         self.matPropBut.setEnabled(False)
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         layout.addWidget(self.matType)
         layout.addWidget(self.matPropBut)
-        self.matLayout = QtGui.QFormLayout()
-        self.matLayout.addRow(QtGui.QLabel(self.tr("Material type:")),
+        self.matLayout = QtWidgets.QFormLayout()
+        self.matLayout.addRow(QtWidgets.QLabel(self.tr("Material type:")),
                               layout)
-        matFrame = QtGui.QGroupBox(self.tr("Material"))
+        matFrame = QtWidgets.QGroupBox(self.tr("Material"))
         matFrame.setLayout(self.matLayout)
         return matFrame
 
@@ -296,7 +299,9 @@ class FiberEditor(AppWindow):
             self.layerList.addItem(name)
 
         self.actions['remove'].setEnabled(False)
-        self.layerName.setText("")
+        # No layer is selected: do not rename one through textChanged.
+        with blockSignals(self.layerName):
+            self.layerName.setText("")
 
     def selectLayer(self):
         index = self.layerList.currentRow()
@@ -394,7 +399,7 @@ class FiberEditor(AppWindow):
         self.radiusInput.setValue(layer.radius)
         self.radiusInput.valueChanged.connect(self.updateRadius)
 
-        self.geomLayout.addRow(QtGui.QLabel(self.tr("Radius:")),
+        self.geomLayout.addRow(QtWidgets.QLabel(self.tr("Radius:")),
                                self.radiusInput)
 
     def setSuperGaussianGeom(self):
@@ -426,11 +431,11 @@ class FiberEditor(AppWindow):
         self.mInput.valueChanged.connect(
             lambda v: self._updateParam("tparams", 3, v))
 
-        self.geomLayout.addRow(QtGui.QLabel(self.tr("Center (mu):")),
+        self.geomLayout.addRow(QtWidgets.QLabel(self.tr("Center (mu):")),
                                self.muInput)
-        self.geomLayout.addRow(QtGui.QLabel(self.tr("Width (c):")),
+        self.geomLayout.addRow(QtWidgets.QLabel(self.tr("Width (c):")),
                                self.cInput)
-        self.geomLayout.addRow(QtGui.QLabel(self.tr("m parameter:")),
+        self.geomLayout.addRow(QtWidgets.QLabel(self.tr("m parameter:")),
                                self.mInput)
 
     def updateRadius(self, value):
@@ -478,7 +483,7 @@ class FiberEditor(AppWindow):
         self.indexInput.valueChanged.connect(self.updateIndex)
         self.indexInput.codeParams = ['r', 'fp', 'mp']
 
-        self.matLayout.addRow(QtGui.QLabel(self.tr("Index:")),
+        self.matLayout.addRow(QtWidgets.QLabel(self.tr("Index:")),
                               self.indexInput)
 
     def updateIndex(self, value):
@@ -494,8 +499,9 @@ class FiberEditor(AppWindow):
         self.molInput.valueChanged.connect(self.updateMol)
         self.molInput.codeParams = ['r', 'fp', 'mp']
 
-        self.matLayout.addRow(QtGui.QLabel(self.tr("Molar concentration:")),
-                              self.molInput)
+        self.matLayout.addRow(
+            QtWidgets.QLabel(self.tr("Molar concentration:")),
+            self.molInput)
 
     def updateMol(self, value):
         self._updateParam("mparams", 0, value)
@@ -523,7 +529,7 @@ class FiberEditor(AppWindow):
         layerIndex = self.layerList.currentRow()
         layer = self.factory.layers[layerIndex]
         mat = material.__dict__[layer.material]
-        msgBox = QtGui.QMessageBox()
+        msgBox = QtWidgets.QMessageBox()
         msgBox.setWindowTitle(mat.name)
         text = "<h1>{}</h1>".format(mat.name)
         if mat.info:
@@ -531,4 +537,4 @@ class FiberEditor(AppWindow):
         if mat.url:
             text += '<p><a href="{url}">{url}</a></p>'.format(url=mat.url)
         msgBox.setText(text)
-        msgBox.exec_()
+        msgBox.exec()

@@ -1,14 +1,14 @@
 
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtGui, QtWidgets
 import os
 from functools import partial
 import logging
 
 
-class AppWindow(QtGui.QMainWindow):
+class AppWindow(QtWidgets.QMainWindow):
 
-    closed = QtCore.pyqtSignal()
-    saved = QtCore.pyqtSignal(str)
+    closed = QtCore.Signal()
+    saved = QtCore.Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -101,12 +101,12 @@ class AppWindow(QtGui.QMainWindow):
                 for folder in ("16x16", "22x22", "32x32"):
                     filePath = "{}/tango/{}/{}/{}.png".format(
                         self.iconPath, folder, subfolder, iconName)
+                    if os.path.isfile(filePath):
+                        icon.addFile(filePath)
+                filePath = "{}/tango/scalable/{}/{}.svg".format(
+                    self.iconPath, subfolder, iconName)
                 if os.path.isfile(filePath):
                     icon.addFile(filePath)
-            filePath = "{}/tango/scalable/{}/{}.svg".format(
-                    self.iconPath, subfolder, iconName)
-            if os.path.isfile(filePath):
-                icon.addFile(filePath)
         return icon
 
     def initActions(self, actions):
@@ -162,7 +162,7 @@ class AppWindow(QtGui.QMainWindow):
 
     def initToolbars(self, toolbars):
         for toolbar in toolbars:
-            tb = QtGui.QToolBar(self)
+            tb = QtWidgets.QToolBar(self)
             for item in toolbar:
                 if item == '-':
                     tb.addSeparator()
@@ -194,22 +194,23 @@ class AppWindow(QtGui.QMainWindow):
 
     def _closeDocument(self):
         if self.dirty():
-            msgBox = QtGui.QMessageBox()
+            msgBox = QtWidgets.QMessageBox()
             msgBox.setText(self.tr("The document has been modified."))
             msgBox.setInformativeText(
                 self.tr("Do you want to save your changes?"))
-            msgBox.setStandardButtons(QtGui.QMessageBox.Save |
-                                      QtGui.QMessageBox.Discard |
-                                      QtGui.QMessageBox.Cancel)
-            msgBox.setDefaultButton(QtGui.QMessageBox.Save)
-            ret = msgBox.exec_()
-            if ret == QtGui.QMessageBox.Save:
+            msgBox.setStandardButtons(
+                QtWidgets.QMessageBox.StandardButton.Save |
+                QtWidgets.QMessageBox.StandardButton.Discard |
+                QtWidgets.QMessageBox.StandardButton.Cancel)
+            msgBox.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Save)
+            ret = QtWidgets.QMessageBox.StandardButton(msgBox.exec())
+            if ret == QtWidgets.QMessageBox.StandardButton.Save:
                 # Save was clicked
                 self.save()
-            elif ret == QtGui.QMessageBox.Discard:
+            elif ret == QtWidgets.QMessageBox.StandardButton.Discard:
                 # Don't save was clicked
                 return True
-            elif ret == QtGui.QMessageBox.Cancel:
+            elif ret == QtWidgets.QMessageBox.StandardButton.Cancel:
                 # cancel was clicked
                 return False
         return True

@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with FiberModes.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 from fibermodesgui import blockSignals
 from fibermodesgui.widgets.delegate import ComboItemDelegate
@@ -21,7 +21,7 @@ from fibermodes import ModeFamily
 
 
 FIBERS, WAVELENGTHS, VNUMBER, MODES = range(4)
-YAXISLIST = QtCore.Qt.UserRole + 1
+YAXISLIST = QtCore.Qt.ItemDataRole.UserRole + 1
 MARK = ["None", "Mode", "Circle (o)", "Square (s)", "Triangle (t)",
         "Diamond (d)", "Plus (+)"]
 MARKV = [None, "Mode", 'o', 's', 't', 'd', '+']
@@ -32,34 +32,36 @@ LINES = ['────',
          '-------',
          '_._._._',
          '_.._.._']
-LINESV = [QtCore.Qt.SolidLine,
-          QtCore.Qt.DotLine,
-          QtCore.Qt.DashLine,
-          QtCore.Qt.DashDotLine,
-          QtCore.Qt.DashDotDotLine]
+# Pen styles are stored as int values, in the model and in .solver files.
+# Convert them with QtCore.Qt.PenStyle(value) when drawing.
+LINESV = [QtCore.Qt.PenStyle.SolidLine.value,
+          QtCore.Qt.PenStyle.DotLine.value,
+          QtCore.Qt.PenStyle.DashLine.value,
+          QtCore.Qt.PenStyle.DashDotLine.value,
+          QtCore.Qt.PenStyle.DashDotDotLine.value]
 
 
-class PlotOptions(QtGui.QDialog):
+class PlotOptions(QtWidgets.QDialog):
 
-    def __init__(self, parent, f=QtCore.Qt.Widget):
+    def __init__(self, parent, f=QtCore.Qt.WindowType.Widget):
         super().__init__(parent, f)
         self.parent = parent
 
-        self.showLegend = QtGui.QCheckBox(self.tr("Show legend"))
-        self.showLegend.stateChanged.connect(parent.updatePlot)
+        self.showLegend = QtWidgets.QCheckBox(self.tr("Show legend"))
+        self.showLegend.toggled.connect(parent.updatePlot)
 
-        self.showCutoffs = QtGui.QCheckBox(self.tr("Show cutoffs"))
-        self.showCutoffs.stateChanged.connect(parent.updatePlot)
+        self.showCutoffs = QtWidgets.QCheckBox(self.tr("Show cutoffs"))
+        self.showCutoffs.toggled.connect(parent.updatePlot)
         self.showCutoffs.setEnabled(False)
 
-        self.showLayers = QtGui.QCheckBox(self.tr("Show layer boundaries"))
-        self.showLayers.stateChanged.connect(parent.updatePlot)
+        self.showLayers = QtWidgets.QCheckBox(self.tr("Show layer boundaries"))
+        self.showLayers.toggled.connect(parent.updatePlot)
 
-        self.showCurrentFiberWl = QtGui.QCheckBox(
+        self.showCurrentFiberWl = QtWidgets.QCheckBox(
             self.tr("Show current fiber / wavelength"))
-        self.showCurrentFiberWl.stateChanged.connect(parent.updatePlot)
+        self.showCurrentFiberWl.toggled.connect(parent.updatePlot)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.showLegend)
         layout.addWidget(self.showCutoffs)
         layout.addWidget(self.showLayers)
@@ -93,7 +95,7 @@ class PlotOptions(QtGui.QDialog):
 class PropertyItemDelegate(ComboItemDelegate):
 
     def __init__(self, parent=None):
-        super().__init__(parent, role=QtCore.Qt.UserRole)
+        super().__init__(parent, role=QtCore.Qt.ItemDataRole.UserRole)
 
     def createEditor(self, parent, option, index):
         try:
@@ -103,17 +105,17 @@ class PropertyItemDelegate(ComboItemDelegate):
         return super().createEditor(parent, option, index)
 
 
-class YAxisTableView(QtGui.QTableView):
+class YAxisTableView(QtWidgets.QTableView):
 
     def __init__(self, model, parent=None):
         super().__init__(parent)
         self.setModel(model)
 
         self.propertyItemDelegate = PropertyItemDelegate(self)
-        self.lineStyleItemDelegate = ComboItemDelegate(self, LINES, LINESV,
-                                                       QtCore.Qt.UserRole)
-        self.markItemDelegate = ComboItemDelegate(self, MARK, MARKV,
-                                                  QtCore.Qt.UserRole)
+        self.lineStyleItemDelegate = ComboItemDelegate(
+            self, LINES, LINESV, QtCore.Qt.ItemDataRole.UserRole)
+        self.markItemDelegate = ComboItemDelegate(
+            self, MARK, MARKV, QtCore.Qt.ItemDataRole.UserRole)
         self.setItemDelegateForColumn(0, self.propertyItemDelegate)
         self.setItemDelegateForColumn(1, self.lineStyleItemDelegate)
         self.setItemDelegateForColumn(2, self.markItemDelegate)
@@ -134,15 +136,15 @@ class PlotModel(QtCore.QAbstractTableModel):
         super().__init__(parent)
         self.doc = parent.doc
 
-        self.plots = [[0, hash(QtCore.Qt.SolidLine), None]]
+        self.plots = [[0, QtCore.Qt.PenStyle.SolidLine.value, None]]
 
-    def rowCount(self, parent=QtCore.QModelIndex):
+    def rowCount(self, parent=QtCore.QModelIndex()):
         return len(self.plots)
 
-    def columnCount(self, parent=QtCore.QModelIndex):
+    def columnCount(self, parent=QtCore.QModelIndex()):
         return 3
 
-    def data(self, index, role=QtCore.Qt.DisplayRole):
+    def data(self, index, role=QtCore.Qt.ItemDataRole.DisplayRole):
         value = self.plots[index.row()][index.column()]
 
         if index.column() == 0:
@@ -152,38 +154,39 @@ class PlotModel(QtCore.QAbstractTableModel):
                 params = [(p, i) for (i, p) in enumerate(self.doc.params)
                           if i not in c]
                 return zip(*params)
-            if role == QtCore.Qt.UserRole:
+            if role == QtCore.Qt.ItemDataRole.UserRole:
                 return value
 
-            if role == QtCore.Qt.DisplayRole:
+            if role == QtCore.Qt.ItemDataRole.DisplayRole:
                 try:
                     return self.doc.params[value]
                 except IndexError:
                     return ''
 
         elif index.column() == 1:  # line style
-            if role == QtCore.Qt.UserRole:
+            if role == QtCore.Qt.ItemDataRole.UserRole:
                 return value
-            elif role == QtCore.Qt.DisplayRole:
+            elif role == QtCore.Qt.ItemDataRole.DisplayRole:
                 return LINES[LINESV.index(value)]
 
         elif index.column() == 2:  # mark
-            if role == QtCore.Qt.UserRole:
+            if role == QtCore.Qt.ItemDataRole.UserRole:
                 return value
-            elif role == QtCore.Qt.DisplayRole:
+            elif role == QtCore.Qt.ItemDataRole.DisplayRole:
                 return MARK[MARKV.index(value)]
 
-        if role == QtCore.Qt.DisplayRole:
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
             return value
 
-    def setData(self, index, value, role=QtCore.Qt.DisplayRole):
+    def setData(self, index, value, role=QtCore.Qt.ItemDataRole.DisplayRole):
         self.plots[index.row()][index.column()] = value
         self.dataChanged.emit(index, index)
         return True
 
-    def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
+    def headerData(self, section, orientation,
+                   role=QtCore.Qt.ItemDataRole.DisplayRole):
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+            if orientation == QtCore.Qt.Orientation.Horizontal:
                 labels = [self.tr("y axis"),
                           self.tr("Line"),
                           self.tr("Mark")]
@@ -192,9 +195,9 @@ class PlotModel(QtCore.QAbstractTableModel):
                 return str(section + 1)
 
     def flags(self, index):
-        return (QtCore.Qt.ItemIsEnabled |
-                QtCore.Qt.ItemIsSelectable |
-                QtCore.Qt.ItemIsEditable)
+        return (QtCore.Qt.ItemFlag.ItemIsEnabled |
+                QtCore.Qt.ItemFlag.ItemIsSelectable |
+                QtCore.Qt.ItemFlag.ItemIsEditable)
 
     def save(self):
         data = self.plots.copy()
@@ -219,7 +222,7 @@ class PlotModel(QtCore.QAbstractTableModel):
                 break
 
         i = len(self.plots)
-        self.plots.append([ci, QtCore.Qt.SolidLine, None])
+        self.plots.append([ci, QtCore.Qt.PenStyle.SolidLine.value, None])
         self.rowsInserted.emit(QtCore.QModelIndex(), i, i)
 
     def removeRow(self, i):
@@ -231,9 +234,9 @@ class PlotModel(QtCore.QAbstractTableModel):
         self.rowsRemoved.emit(QtCore.QModelIndex(), i, i)
 
 
-class PlotFrame(QtGui.QFrame):
+class PlotFrame(QtWidgets.QFrame):
 
-    modified = QtCore.pyqtSignal()
+    modified = QtCore.Signal()
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -251,14 +254,14 @@ class PlotFrame(QtGui.QFrame):
         self.plotModel.rowsInserted.connect(self.updatePMButs)
         self.plotModel.rowsRemoved.connect(self.updatePMButs)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addLayout(self._xAxisLayout())
         layout.addWidget(self.yAxisTable)
         layout.addWidget(self.plot, stretch=1)
         self.setLayout(layout)
 
     def _xAxisLayout(self):
-        self.xAxisSelector = QtGui.QComboBox()
+        self.xAxisSelector = QtWidgets.QComboBox()
         self.xAxisSelector.addItem(self.tr("Fibers"))
         self.xAxisSelector.addItem(self.tr("Wavelengths"))
         self.xAxisSelector.addItem(self.tr("V number"))
@@ -266,25 +269,25 @@ class PlotFrame(QtGui.QFrame):
         self.xAxisSelector.currentIndexChanged.connect(self.updatePlot)
         self.xAxisSelector.setCurrentIndex(VNUMBER)
 
-        self.optionsBut = QtGui.QPushButton(
+        self.optionsBut = QtWidgets.QPushButton(
             QtGui.QIcon.fromTheme('document-properties'),
             self.tr("Options"))
         self.optionsBut.setCheckable(True)
         self.optionsBut.toggled.connect(self.plotOptions.setVisible)
 
-        self.plusBut = QtGui.QPushButton(
+        self.plusBut = QtWidgets.QPushButton(
             QtGui.QIcon.fromTheme('list-add'), '')
         self.plusBut.setToolTip(self.tr("Add plot parameter"))
         self.plusBut.clicked.connect(self.plotModel.addRow)
 
-        self.minusBut = QtGui.QPushButton(
+        self.minusBut = QtWidgets.QPushButton(
             QtGui.QIcon.fromTheme('list-remove'), '')
         self.minusBut.setToolTip(self.tr("Remove plot parameter"))
         self.minusBut.clicked.connect(self.yAxisTable.removeRow)
         self.minusBut.setEnabled(False)
 
-        layout = QtGui.QHBoxLayout()
-        layout.addWidget(QtGui.QLabel(self.tr("x axis:")))
+        layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(QtWidgets.QLabel(self.tr("x axis:")))
         layout.addWidget(self.xAxisSelector)
         layout.addWidget(self.optionsBut)
         layout.addWidget(self.plusBut)
@@ -313,14 +316,14 @@ class PlotFrame(QtGui.QFrame):
         if not self.doc.initialized:
             return
 
+        # pyqtgraph keeps one legend per plot (addLegend returns it), and
+        # plot.clear() removes the cleared curves from it.
         self.plot.clear()
         if self.plotOptions.showLegend.isChecked():
-            if self.legend is not None:
-                self.legend.scene().removeItem(self.legend)
             self.legend = self.plot.addLegend()
+            self.legend.setVisible(True)
         elif self.legend is not None:
-            self.legend.scene().removeItem(self.legend)
-            self.legend = None
+            self.legend.setVisible(False)
 
         self._updateXAxis()
 
@@ -375,7 +378,7 @@ class PlotFrame(QtGui.QFrame):
                 posx = fiber.V0(self.doc.wavelengths[self._wl])
             self.plot.addLine(x=posx,
                               pen=pg.mkPen(color=(255, 255, 255, 255),
-                                           style=QtCore.Qt.DotLine,
+                                           style=QtCore.Qt.PenStyle.DotLine,
                                            width=3))
 
         viewBox = self.plot.getPlotItem().getViewBox()
@@ -384,12 +387,12 @@ class PlotFrame(QtGui.QFrame):
 
     def plotGraph(self, row):
         what = self.plotModel.data(self.plotModel.index(row, 0),
-                                   QtCore.Qt.UserRole)
+                                   QtCore.Qt.ItemDataRole.UserRole)
         line = self.plotModel.data(self.plotModel.index(row, 1),
-                                   role=QtCore.Qt.UserRole)
+                                   role=QtCore.Qt.ItemDataRole.UserRole)
         line = QtCore.Qt.PenStyle(line)
         mark = self.plotModel.data(self.plotModel.index(row, 2),
-                                   QtCore.Qt.UserRole)
+                                   QtCore.Qt.ItemDataRole.UserRole)
         if mark is None and len(self.X) == 1:
             mark = 'o'
         xaxis = self.xAxisSelector.currentIndex()
@@ -416,7 +419,7 @@ class PlotFrame(QtGui.QFrame):
                         y[m] = [(w, v)]
 
         for m, xy in y.items():
-            if self.doc.selection.get(m, 1) == 0:
+            if not self.doc.selection.get(m, True):
                 continue
             X, Y = zip(*sorted(xy))
             if xaxis == VNUMBER:
@@ -445,7 +448,7 @@ class PlotFrame(QtGui.QFrame):
         else:
             index = self.doc.params.index("cutoff (V)")
         for (f, w, m, j), v in self.doc.values.items():
-            if self.doc.selection.get(m, 1) == 0:
+            if not self.doc.selection.get(m, True):
                 continue
             if j == index and f == self._fnum and w == 0:
                 if self.X[0] < v < self.X[-1]:
@@ -453,14 +456,14 @@ class PlotFrame(QtGui.QFrame):
                     self.plot.addLine(
                         x=v,
                         pen=pg.mkPen(color=col,
-                                     style=QtCore.Qt.DashLine,
+                                     style=QtCore.Qt.PenStyle.DashLine,
                                      width=3 if m in self._modesel else 1))
 
     def plotLayers(self):
         if self.plotModel.rowCount() == 0:
             return
         what = self.plotModel.data(self.plotModel.index(0, 0),
-                                   QtCore.Qt.UserRole)
+                                   QtCore.Qt.ItemDataRole.UserRole)
         p = self.doc.params[what]
         norm = True if p == 'b' else False
 
@@ -479,7 +482,7 @@ class PlotFrame(QtGui.QFrame):
                         n[i] = (n[i]**2 - n2[i]**2) / (n1[i]**2 - n2[i]**2)
                 self.plot.plot(self.X, n,
                                pen=pg.mkPen(color='w',
-                                            style=QtCore.Qt.DotLine))
+                                            style=QtCore.Qt.PenStyle.DotLine))
         else:
             fiber = self.doc.fibers[self._fnum]
             wls = (self.doc.wavelengths if xaxis == WAVELENGTHS
@@ -495,7 +498,7 @@ class PlotFrame(QtGui.QFrame):
                         n[i] = (n[i]**2 - n2[i]**2) / (n1[i]**2 - n2[i]**2)
                 self.plot.plot(self.X, n,
                                pen=pg.mkPen(color='w',
-                                            style=QtCore.Qt.DotLine))
+                                            style=QtCore.Qt.PenStyle.DotLine))
 
     def save(self):
         return {
@@ -508,3 +511,4 @@ class PlotFrame(QtGui.QFrame):
         self.xAxisSelector.setCurrentIndex(int(options['xaxis']))
         self.plotOptions.load(options['options'])
         self.plotModel.load(options['yaxis'])
+        self.updatePlot()

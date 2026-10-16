@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with FiberModes.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4 import QtGui
+from qtpy import QtGui, QtWidgets
 import pyqtgraph as pg
 import numpy
 from fibermodes import Mode, ModeFamily, HE11
@@ -21,7 +21,7 @@ from itertools import count
 from math import isnan
 
 
-class CharEqDialog(QtGui.QDialog):
+class CharEqDialog(QtWidgets.QDialog):
 
     """Plot characteristic function
 
@@ -47,52 +47,52 @@ class CharEqDialog(QtGui.QDialog):
         self.neffMax = max(layer.maxIndex(self.wl)
                            for layer in self.fiber.layers)
 
-        self.label = QtGui.QLabel()
+        self.label = QtWidgets.QLabel()
         self.plot = pg.PlotWidget()
 
-        self.fType = QtGui.QComboBox()
+        self.fType = QtWidgets.QComboBox()
         self.fType.addItems(["Chareq", "Cutoff"])
         self.fType.setCurrentIndex(0)
         self.fType.currentIndexChanged.connect(self.updateMode)
 
-        self.modeInput = QtGui.QComboBox()
+        self.modeInput = QtWidgets.QComboBox()
         self.modeInput.addItems(list(m.name for m in ModeFamily))
         self.modeInput.setCurrentIndex(
             self.modeInput.findText(self.mode.family.name))
         self.modeInput.currentIndexChanged.connect(self.updateMode)
 
-        self.nuInput = QtGui.QSpinBox()
+        self.nuInput = QtWidgets.QSpinBox()
         self.nuInput.setValue(self.mode.nu)
         self.nuInput.valueChanged.connect(self.updateMode)
 
-        self.mInput = QtGui.QSpinBox()
+        self.mInput = QtWidgets.QSpinBox()
         self.mInput.setRange(1, 100)
         self.mInput.setValue(self.mode.m)
         self.mInput.valueChanged.connect(self.updateMode)
 
-        npLabel = QtGui.QLabel(self.tr("# points"))
-        self.npInput = QtGui.QSpinBox()
+        npLabel = QtWidgets.QLabel(self.tr("# points"))
+        self.npInput = QtWidgets.QSpinBox()
         self.npInput.setRange(50, 10000)
         self.npInput.setValue(50)
         self.npInput.setSingleStep(50)
         self.npInput.valueChanged.connect(self.updateMode)
         npLabel.setBuddy(self.npInput)
 
-        self.zeros = QtGui.QCheckBox(self.tr("Show zeros"))
+        self.zeros = QtWidgets.QCheckBox(self.tr("Show zeros"))
         self.zeros.toggled.connect(self.showZeros)
 
-        self.points = QtGui.QCheckBox(self.tr("Show points"))
+        self.points = QtWidgets.QCheckBox(self.tr("Show points"))
         self.points.toggled.connect(self.showZeros)
 
-        dLabel = QtGui.QLabel(self.tr("∆"))
-        deltaValidator = QtGui.QDoubleValidator(bottom=1e-31, top=1)
-        self.delta = QtGui.QLineEdit()
+        dLabel = QtWidgets.QLabel(self.tr("∆"))
+        deltaValidator = QtGui.QDoubleValidator(1e-31, 1, 1000)
+        self.delta = QtWidgets.QLineEdit()
         self.delta.setValidator(deltaValidator)
         self.delta.setText("{:e}".format(parent.doc.simulator.delta))
         self.delta.textChanged.connect(self.setDelta)
         dLabel.setBuddy(self.delta)
 
-        hlayout = QtGui.QHBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
         if hasattr(self.fiber._cutoff, '_lpcoeq'):
             hlayout.addWidget(self.fType)
         hlayout.addWidget(self.modeInput)
@@ -107,7 +107,7 @@ class CharEqDialog(QtGui.QDialog):
         hlayout.addWidget(self.delta)
         hlayout.addStretch(1)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.label)
         layout.addLayout(hlayout)
         layout.addWidget(self.plot)
@@ -255,7 +255,7 @@ class CharEqDialog(QtGui.QDialog):
                     x = self._get_cutoff_eq_zeros()
                 y = [0] * len(x)
                 self.__zeros = pg.ScatterPlotItem(x, y, pen='r', brush='r')
-            self.plot.addItem(self.__zeros)
+            self._addItem(self.__zeros)
 
             if self.__points is None:
                 x, y = [], []
@@ -268,7 +268,7 @@ class CharEqDialog(QtGui.QDialog):
                 self.__points = pg.ScatterPlotItem(x, y, pen='b', brush='b')
 
             if ckpoints:
-                self.plot.addItem(self.__points)
+                self._addItem(self.__points)
                 self.__points.stackBefore(self.__zeros)
 
         else:
@@ -278,6 +278,11 @@ class CharEqDialog(QtGui.QDialog):
         if not ckpoints:
             if self.__points is not None:
                 self.plot.removeItem(self.__points)
+
+    def _addItem(self, item):
+        # pyqtgraph 0.13+ warns when an item is added twice.
+        if item not in self.plot.getPlotItem().items:
+            self.plot.addItem(item)
 
     def setDelta(self, value):
         self.showZeros(self.zeros.isChecked(), reset=True)

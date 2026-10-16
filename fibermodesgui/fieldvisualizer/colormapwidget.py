@@ -1,7 +1,6 @@
-from PyQt4 import QtGui, QtCore
+from qtpy import QtCore, QtWidgets
 from pyqtgraph import GradientWidget
-from pyqtgraph.graphicsItems import GradientEditorItem
-from .colormaps import _magma_data, _inferno_data, _plasma_data, _viridis_data
+from pyqtgraph.graphicsItems.GradientEditorItem import Gradients
 from .parula import cm_data as _parula_data
 import numpy
 
@@ -15,32 +14,30 @@ def addCM(name, data):
     cp = numpy.linspace(0, 1, np)
     ticks = [(c, frgb(rgb)) for (c, rgb) in zip(cp, data)]
     # TODO: remove unneeded points (if possible...)
-    GradientEditorItem.Gradients[name] = {
+    Gradients[name] = {
         'ticks': ticks,
         'mode': 'rgb'
     }
 
-addCM('viridis', _viridis_data)
+
+# pyqtgraph already includes viridis, inferno, plasma and magma.
 addCM('parula', _parula_data)
-addCM('magma', _magma_data)
-addCM('inferno', _inferno_data)
-addCM('plasma', _plasma_data)
 
 
-class ColorMapWidget(QtGui.QGroupBox):
+class ColorMapWidget(QtWidgets.QGroupBox):
 
-    sigGradientChanged = QtCore.pyqtSignal()
+    sigGradientChanged = QtCore.Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTitle(self.tr("Color Map"))
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
 
         # TODO: load / save other presets...
 
         # self._gradients = GradientEditorItem.Gradients
         #
-        # self.preset = QtGui.QComboBox()
+        # self.preset = QtWidgets.QComboBox()
         # self.preset.addItems(list(self._gradients.keys()))
         # self.preset.insertSeparator(len(self._gradients))
         # self.preset.addItem(self.tr('Load ColorMap...'))

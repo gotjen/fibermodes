@@ -1,5 +1,3 @@
-from matplotlib.colors import LinearSegmentedColormap
-
 cm_data = [[0.2081, 0.1663, 0.5292], [0.2116238095, 0.1897809524, 0.5776761905], 
  [0.212252381, 0.2137714286, 0.6269714286], [0.2081, 0.2386, 0.6770857143], 
  [0.1959047619, 0.2644571429, 0.7279], [0.1707285714, 0.2919380952, 
@@ -42,9 +40,15 @@ cm_data = [[0.2081, 0.1663, 0.5292], [0.2116238095, 0.1897809524, 0.5776761905],
   0.0948380952], [0.9661, 0.9514428571, 0.0755333333], 
  [0.9763, 0.9831, 0.0538]]
 
-parula_map = LinearSegmentedColormap.from_list('parula', cm_data)
-# For use of "viscm view"
-test_cm = parula_map
+try:
+    # matplotlib is optional; the GUI only needs cm_data.
+    from matplotlib.colors import LinearSegmentedColormap
+except ImportError:
+    pass
+else:
+    parula_map = LinearSegmentedColormap.from_list('parula', cm_data)
+    # For use of "viscm view"
+    test_cm = parula_map
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt

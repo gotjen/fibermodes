@@ -17,6 +17,8 @@
 
 import unittest
 
+import pytest
+
 from fibermodes import FiberFactory, Mode, Wavelength
 from math import sqrt
 
@@ -60,6 +62,7 @@ class TestTLSIF(unittest.TestCase):
             self._compareWithCo(fiber, mode, neff)
             self.assertAlmostEqual(fiber.neff(mode, wl, delta=1e-5), neff)
 
+    @pytest.mark.stress
     def testCase2LP(self):
         """Annular-core fiber."""
         self.f.addLayer(radius=4e-6, index=1.4444)
@@ -78,6 +81,7 @@ class TestTLSIF(unittest.TestCase):
         for mode, neff in sols:
             self.assertAlmostEqual(fiber.neff(mode, wl, delta=1e-4), neff)
 
+    @pytest.mark.stress
     def testCase3LP(self):
         self.f.addLayer(radius=4e-6, index=1.4474)
         self.f.addLayer(radius=10e-6, index=1.4489)
@@ -96,6 +100,7 @@ class TestTLSIF(unittest.TestCase):
         for mode, neff in sols:
             self.assertAlmostEqual(fiber.neff(mode, wl, delta=1e-5), neff)
 
+    @pytest.mark.stress
     def testCase4LP(self):
         self.f.addLayer(radius=4e-6, index=1.4444)
         self.f.addLayer(radius=10e-6, index=1.4489)
@@ -112,6 +117,7 @@ class TestTLSIF(unittest.TestCase):
         for mode, neff in sols:
             self.assertAlmostEqual(fiber.neff(mode, wl, delta=1e-5), neff)
 
+    @pytest.mark.stress
     def testCase5LP(self):
         """W-type fiber."""
         self.f.addLayer(radius=10e-6, index=1.4489)
@@ -146,6 +152,7 @@ class TestTLSIF(unittest.TestCase):
         for mode, neff in sols:
             self.assertAlmostEqual(fiber.neff(mode, wl, delta=1e-5), neff)
 
+    @pytest.mark.stress
     def testCase2Vector(self):
         """Annular-core fiber."""
         self.f.addLayer(radius=4e-6, index=1.4444)
@@ -166,6 +173,7 @@ class TestTLSIF(unittest.TestCase):
         for mode, neff in sols:
             self.assertAlmostEqual(fiber.neff(mode, wl, delta=1e-4), neff)
 
+    @pytest.mark.stress
     def testCase3Vector(self):
         self.f.addLayer(radius=4e-6, index=1.4474)
         self.f.addLayer(radius=10e-6, index=1.4489)
@@ -186,6 +194,7 @@ class TestTLSIF(unittest.TestCase):
         for mode, neff in sols:
             self.assertAlmostEqual(fiber.neff(mode, wl, delta=1e-5), neff)
 
+    @pytest.mark.stress
     def testCase4Vector(self):
         self.f.addLayer(radius=4e-6, index=1.4444)
         self.f.addLayer(radius=10e-6, index=1.4489)
@@ -203,6 +212,7 @@ class TestTLSIF(unittest.TestCase):
         for mode, neff in sols:
             self.assertAlmostEqual(fiber.neff(mode, wl, delta=1e-5), neff)
 
+    @pytest.mark.stress
     def testCase5Vector(self):
         """Annular-core fiber."""
         self.f.addLayer(radius=10e-6, index=1.4489)
@@ -280,6 +290,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testLPCutoffB(self):
         rho = [4e-6, 6e-6]
         n = [1.47, 1.45, 1.44]
@@ -299,6 +310,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testVCutoffB(self):
         rho = [4e-6, 6e-6]
         n = [1.47, 1.45, 1.44]
@@ -330,6 +342,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testLPCutoffC(self):
         rho = [4e-6, 6e-6]
         n = [1.43, 1.47, 1.44]
@@ -346,6 +359,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testVCutoffC(self):
         rho = [4e-6, 6e-6]
         n = [1.43, 1.47, 1.44]
@@ -377,6 +391,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testLPCutoffD(self):
         rho = [4e-6, 6e-6]
         n = [1.45, 1.47, 1.44]
@@ -397,6 +412,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testVCutoffD(self):
         rho = [4e-6, 6e-6]
         n = [1.45, 1.47, 1.44]
@@ -430,6 +446,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testLPCutoffE(self):
         rho = [4e-6, 6e-6]
         n = [1.44, 1.47, 1.44]
@@ -447,6 +464,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testVCutoffE(self):
         rho = [4e-6, 6e-6]
         n = [1.44, 1.47, 1.44]
@@ -474,6 +492,7 @@ class TestTLSIF(unittest.TestCase):
 
         self._testFiberCutoff(rho, n, cutoffs)
 
+    @pytest.mark.stress
     def testCutoffTableIII(self):
         """Values from cutoff acticle, Table III."""
         n = (1.444, 1.474, 1.444)
@@ -527,6 +546,7 @@ class TestTLSIF(unittest.TestCase):
         }
         self._testFiberCutoff(rho, n, cutoffs, 4)
 
+    @pytest.mark.stress
     def testBuresEx334(self):
         self.f.addLayer(material="SiO2GeO2", radius=4.5e-6,
                         index=1.448918, wl=1550e-9)
